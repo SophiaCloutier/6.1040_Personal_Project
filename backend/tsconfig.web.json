@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", "module": "ESNext", "moduleResolution": "Bundler",
+    "strict": true, "skipLibCheck": true, "allowImportingTsExtensions": true,
+    "lib": ["ESNext", "DOM"], "types": ["bun", "vite/client"], "noEmit": true,
+    "paths": { "@design/*": ["./design/*"] }
+  },
+  "include": ["web/**/*.ts", "web/**/*.vue", "generated/**/*.ts", "src/text.d.ts"]
+}

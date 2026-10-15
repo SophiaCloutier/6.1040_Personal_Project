@@ -1,0 +1,83 @@
+import { expect, test } from 'bun:test';
+import { MongoClient } from 'mongodb';
+import { createGateway } from '@mit-sdg/sync-engine/boundary';
+import { createHttpHandler } from '@mit-sdg/sync-engine-http/handler';
+import { assembleApplication } from '../src/assembly.ts';
+import { policy } from '../src/edge.ts';
+
+test('empty-database journey, role enforcement, concurrent claims, and persistence', async () => {
+  const name = `claimed_journey_${crypto.randomUUID().replaceAll('-', '')}`;
+  process.env.MONGODB_DATABASE = name;
+  const admin = new MongoClient('mongodb://127.0.0.1:27017');
+  const application = assembleApplication();
+  const handler = createHttpHandler({ application, gateway: createGateway({ application }), policy });
+  async function call(path: string, body: object = {}, cookie = '') {
+    const response = await handler(new Request(`http://localhost:3000/api${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:3000', Cookie: cookie }, body: JSON.stringify(body) }));
+    return { status: response.status, body: await response.json() as any, cookie: response.headers.get('set-cookie')?.split(';')[0] ?? '' };
+  }
+  try {
+    expect((await call('/marketplace/activity')).status).toBe(401);
+    const seller = await call('/auth/register', { username: 'sophia', password: 'seller-password' });
+    const buyer = await call('/auth/register', { username: 'percy', password: 'buyer-password' });
+    const rival = await call('/auth/register', { username: 'rival', password: 'rival-password' });
+    expect(seller.status).toBe(200);
+    expect(seller.cookie).toContain('claimed-session=');
+    const forged = await call('/marketplace/activity', { session: seller.cookie.split('=')[1] });
+    expect(forged.status).toBeGreaterThanOrEqual(400);
+    const crossOrigin = await handler(new Request('http://localhost:3000/api/marketplace/activity', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'https://untrusted.example', Cookie: seller.cookie }, body: '{}' }));
+    expect(crossOrigin.status).toBe(403);
+    expect((await call('/marketplace/activity', {}, buyer.cookie)).body.marketplace.listings).toEqual([]);
+    const details = JSON.stringify({ title: 'Reading chair', price: 24, description: 'A comfy chair', category: 'Furniture', pickup: 'Maseeh Hall', payment: 'Venmo @sophia', image: '' });
+    expect((await call('/marketplace/publish', { details: '{}' }, seller.cookie)).status).toBe(400);
+    const published = await call('/marketplace/publish', { details }, seller.cookie);
+    expect(published.status).toBe(200);
+    const listing = published.body.listing;
+    const guest = await call('/marketplace/list');
+    expect(guest.status).toBe(200);
+    expect(guest.body.marketplace.listings).toHaveLength(1);
+    expect(JSON.parse(guest.body.marketplace.listings[0].details).payment).toBeUndefined();
+    expect(guest.body.marketplace.listings[0].claim.claimer).toBeUndefined();
+    expect(guest.body.marketplace.listings[0].transaction).toBeUndefined();
+    expect((await call('/marketplace/claim', { listing })).status).toBe(401);
+    const availablePage = await call('/marketplace/activity', {}, buyer.cookie);
+    expect(availablePage.body.marketplace.listings).toHaveLength(1);
+    expect(availablePage.body.marketplace.listings[0].claim.status).toBe('available');
+    expect(availablePage.body.marketplace.listings[0].transaction.status).toBeNull();
+    expect((await call('/marketplace/claim', { listing }, buyer.cookie)).status).toBe(200);
+    expect((await call('/marketplace/cancel', { listing }, rival.cookie)).status).toBe(403);
+    expect((await call('/marketplace/cancel', { listing }, buyer.cookie)).status).toBe(200);
+    const releasedPage = await call('/marketplace/activity', {}, buyer.cookie);
+    expect(releasedPage.body.marketplace.listings[0].claim.status).toBe('available');
+    expect(releasedPage.body.marketplace.listings[0].claim.claimer).toBe('');
+    expect(releasedPage.body.marketplace.listings[0].transaction.status).toBeNull();
+    expect((await call('/marketplace/claim', { listing }, buyer.cookie)).status).toBe(200);
+    expect((await call('/marketplace/cancel', { listing }, seller.cookie)).status).toBe(200);
+    expect((await call('/marketplace/claim', { listing }, seller.cookie)).status).toBe(403);
+    const competition = await Promise.all([call('/marketplace/claim', { listing }, buyer.cookie), call('/marketplace/claim', { listing }, rival.cookie)]);
+    expect(competition.map(r => r.status).sort()).toEqual([200, 409]);
+    const winningCookie = competition[0].status === 200 ? buyer.cookie : rival.cookie;
+    const losingCookie = competition[0].status === 200 ? rival.cookie : buyer.cookie;
+    expect((await call('/marketplace/report-paid', { listing }, losingCookie)).status).toBe(403);
+    expect((await call('/marketplace/confirm', { listing }, seller.cookie)).status).toBe(403);
+    expect((await call('/marketplace/report-paid', { listing }, winningCookie)).status).toBe(200);
+    expect((await call('/marketplace/cancel', { listing }, winningCookie)).status).toBe(403);
+    expect((await call('/marketplace/cancel', { listing }, seller.cookie)).status).toBe(403);
+    expect((await call('/marketplace/confirm', { listing }, winningCookie)).status).toBe(403);
+    expect((await call('/marketplace/confirm', { listing }, seller.cookie)).status).toBe(200);
+    expect((await call('/marketplace/cancel', { listing }, winningCookie)).status).toBe(403);
+    const page = await call('/marketplace/activity', {}, seller.cookie);
+    expect(page.body.marketplace.listings[0].claim.status).toBe('completed');
+    expect(page.body.marketplace.listings[0].transaction.status).toBe('confirmed');
+    expect((await call('/marketplace/list')).body.marketplace.listings).toHaveLength(0);
+    const buyerHistory = await call('/marketplace/activity', {}, winningCookie);
+    expect(buyerHistory.body.marketplace.listings[0].claim.status).toBe('completed');
+    expect(buyerHistory.body.marketplace.listings[0].transaction.status).toBe('confirmed');
+    const rebuilt = assembleApplication();
+    const restarted = createHttpHandler({ application: rebuilt, gateway: createGateway({ application: rebuilt }), policy });
+    const response = await restarted(new Request('http://localhost:3000/api/marketplace/activity', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:3000', Cookie: seller.cookie }, body: '{}' }));
+    expect((await response.json() as any).marketplace.listings[0].claim.status).toBe('completed');
+    expect((await call('/auth/sign-out', {}, seller.cookie)).status).toBe(200);
+    expect((await call('/marketplace/activity', {}, seller.cookie)).status).toBe(401);
+  } finally { await admin.db(name).dropDatabase(); await admin.close(); }
+}, 30000);
+
