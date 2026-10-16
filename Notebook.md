@@ -2,7 +2,7 @@
 
 ## Entry 1: Keeping the first version manageable
 
-I'm happy with how the idea is taking shape, but I'm starting to think the offer-based buying (OBO) feature might be too much for the first version. Negotiating offers would add a lot of complexity to what is already a fairly involved buying process. I'm going to focus on fixed-price listings first and only revisit OBO if I have time. I'm otherwise sticking pretty closely to my original problem framing, although I want to find more concrete examples of the situations the platform is meant to fix. The concept and reaction specifications have been the most useful places to work out how those ideas should actually fit together.
+I'm happy with how the idea is taking shape, but I'm starting to think the offer-based buying (OBO) feature might be too much for the first version. Negotiating offers would add a lot of complexity to what is already a fairly involved buying process. I'm going to focus on fixed-price listings first and only revisit OBO if I have time. I'm otherwise sticking pretty closely to my original problem framing. The concept and reaction specifications have been the most useful places to work out how those ideas should actually fit together.
 
 ## Entry 2: Planning the alpha - October 13, 2026
 
@@ -62,3 +62,9 @@ I'm keeping the photos in an ordered list, with the first image acting as the co
 ## Entry 10: Hiding sold listings without losing history - October 15, 2026
 
 Completed sales shouldn't keep appearing in the marketplace grid as if the items were still available. I'm excluding sold listings from public browsing and the signed-in marketplace, but not deleting their records. Buyers and sellers still need those transactions in their activity history. This separates what people can shop for now from what they've already bought or sold.
+
+## Entry 11: Notes for the Beta - October 15, 2026
+
+In recording the video I though of some things I would like to remeber to work on in the Beta. One thing is allowing users to center their images after uploading. Another is that for some reason highlighting the username text in the sign in page closes the sign in page. Finally, I am thinking of maybe requiering some form of uploading proof of payment (like a screenshot) to allow the user to click that they paid. I am not sure how I would implement that yet though. 
+
+I will also need to implement the OBO feature and possibly a chat feature.
