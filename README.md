@@ -20,3 +20,10 @@ The marketplace has a responsive grid and public item pages. Guests can browse w
 - [User Journey](Design/5.%20User%20Journey.md)
 - [Notebook](Notebook.md)
 
+## Demo
+
+<video controls width="100%" src="https://github.com/SophiaCloutier/6.1040_Personal_Project/raw/refs/heads/main/Alpha%20Demo.mp4">
+	<a href="Alpha%20Demo.mp4">Watch the alpha demo</a>
+</video>
+
+If the video player does not load, [download the alpha demo](Alpha%20Demo.mp4).
