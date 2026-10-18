@@ -1,0 +1,35 @@
+bun test v1.4.2 (744846f84)
+
+tests\accounts.test.ts:
+(pass) registration persists hashed credentials, rejects duplicates, and authenticates after reconstruction [1453.49ms]
+(pass) sessions persist, expire, and become unusable after sign-out [243.65ms]
+
+tests\beta.test.ts:
+(pass) beta journey: edits, competing offers, frozen terms, private evidence and conversations [4505.08ms]
+(pass) offers may be declined or withdrawn; full-price reservations supersede proposals [1610.94ms]
+(pass) legacy reservations retain participant-only payment instructions [2074.74ms]
+
+tests\concepts.test.ts:
+(pass) Listing validates prices and fields and preserves seller identity [201.99ms]
+(pass) Claiming enforces availability and claimer identity on completion [199.86ms]
+(pass) TransactionConfirming enforces payment order and both parties [125.03ms]
+(pass) payment reporting and cancellation cannot both win; cancellation permits a fresh transaction [69.25ms]
+
+tests\images.test.ts:
+(pass) photo uploads validate content, resize, persist, and require authentication [2096.32ms]
+
+tests\journey.test.ts:
+(pass) empty-database journey, role enforcement, concurrent claims, and persistence [3204.80ms]
+
+tests\photo-framing.test.ts:
+(pass) drag follows the pointer and stops at image edges without exposing empty space [0.39ms]
+(pass) zoom supports old saved positions and stays within the supported crop range [0.17ms]
+(pass) item viewing can zoom out to fit the full image without changing editor zoom limits [0.07ms]
+
+tests\size-filter.test.ts:
+(pass) size filters preserve unsized items and restrict only items with a size [0.50ms]
+
+ 15 pass
+ 0 fail
+ 180 expect() calls
+Ran 15 tests across 7 files. [16.81s]

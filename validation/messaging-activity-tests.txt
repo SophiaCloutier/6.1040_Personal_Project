@@ -1,0 +1,43 @@
+bun test v1.4.2 (744846f84)
+
+tests\accounts.test.ts:
+(pass) registration persists hashed credentials, rejects duplicates, and authenticates after reconstruction [1628.73ms]
+(pass) sessions persist, expire, and become unusable after sign-out [207.05ms]
+
+tests\activity.test.ts:
+(pass) selling puts confirmations first and sold last, preserving newest order within each group [0.59ms]
+(pass) edits close on reported payment or either completed state, but unpaid reservations remain editable [0.20ms]
+
+tests\beta.test.ts:
+(pass) beta journey: edits, competing offers, frozen terms, private evidence and conversations [4702.30ms]
+(pass) offers may be declined or withdrawn; full-price reservations supersede proposals [3261.13ms]
+(pass) legacy reservations retain participant-only payment instructions [2068.28ms]
+
+tests\concepts.test.ts:
+(pass) Listing validates prices and fields and preserves seller identity [159.88ms]
+(pass) Claiming enforces availability and claimer identity on completion [205.22ms]
+(pass) TransactionConfirming enforces payment order and both parties [123.20ms]
+(pass) payment reporting and cancellation cannot both win; cancellation permits a fresh transaction [69.14ms]
+
+tests\images.test.ts:
+(pass) photo uploads validate content, resize, persist, and require authentication [2331.80ms]
+
+tests\journey.test.ts:
+(pass) empty-database journey, role enforcement, concurrent claims, and persistence [3084.84ms]
+
+tests\messaging.test.ts:
+(pass) busy threads do not hide older conversations and private thread history stays scoped [724.09ms]
+(pass) freezing a listing refuses subsequent concept updates without changing its details [103.96ms]
+
+tests\photo-framing.test.ts:
+(pass) drag follows the pointer and stops at image edges without exposing empty space [0.32ms]
+(pass) zoom supports old saved positions and stays within the supported crop range [0.36ms]
+(pass) item viewing can zoom out to fit the full image without changing editor zoom limits [0.13ms]
+
+tests\size-filter.test.ts:
+(pass) size filters preserve unsized items and restrict only items with a size [0.52ms]
+
+ 19 pass
+ 0 fail
+ 204 expect() calls
+Ran 19 tests across 9 files. [19.67s]
