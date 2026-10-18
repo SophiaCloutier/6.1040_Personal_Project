@@ -27,7 +27,7 @@ Defined in [Authenticating](../design/concepts/Authenticating.md), line 1.
 
 #### Instances
 
-- `Authenticating` — instance of `Authenticating` — [Claimed application types](../design/types.md), line 6.
+- `Authenticating` — instance of `Authenticating` — [Claimed application types](../design/types.md), line 14.
 
 ### Claiming
 
@@ -38,6 +38,10 @@ Defined in [Claiming](../design/concepts/Claiming.md), line 1.
 - `makeAvailable(resource: Resource) : returns (resource: Resource)`
   - Refuses `CLAIM_UNAVAILABLE`: This item already has an availability record.
 - `claim(claimer: Claimer, resource: Resource) : returns (resource: Resource)`
+  - Refuses `CLAIM_UNAVAILABLE`: This item is no longer available.
+- `checkAvailable(resource: Resource) : returns (resource: Resource)`
+  - Refuses `CLAIM_UNAVAILABLE`: This item is no longer available.
+- `reserve(claimer: Claimer, resource: Resource, terms: String) : returns (resource: Resource, claimer: Claimer, terms: String)`
   - Refuses `CLAIM_UNAVAILABLE`: This item is no longer available.
 - `release(claimer: Claimer, resource: Resource) : returns (resource: Resource)`
   - Refuses `CLAIM_UNAVAILABLE`: Only the current claimer can release a reserved item.
@@ -50,9 +54,9 @@ Defined in [Claiming](../design/concepts/Claiming.md), line 1.
 
 #### Instances
 
-- `Claiming` — instance of `Claiming` — [Claimed application types](../design/types.md), line 16.
-  - `Claimer` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 17.
-  - `Resource` is `Listing.Listing` — [Claimed application types](../design/types.md), line 18.
+- `Claiming` — instance of `Claiming` — [Claimed application types](../design/types.md), line 24.
+  - `Claimer` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 25.
+  - `Resource` is `Listing.Listing` — [Claimed application types](../design/types.md), line 26.
 
 ### ImageUploading
 
@@ -65,7 +69,7 @@ Defined in [ImageUploading](../design/concepts/ImageUploading.md), line 1.
 
 #### Instances
 
-- `ImageUploading` — instance of `ImageUploading` — [Claimed application types](../design/types.md), line 8.
+- `ImageUploading` — instance of `ImageUploading` — [Claimed application types](../design/types.md), line 16.
 
 ### Listing
 
@@ -75,9 +79,18 @@ Defined in [Listing](../design/concepts/Listing.md), line 1.
 
 - `create(seller: Seller, details: String) : returns (listing: Listing)`
   - Refuses `INVALID_LISTING`: Enter valid listing information.
+- `owner(listing: Listing) : returns (seller: Seller)`
+  - Refuses `INVALID_LISTING`: This listing no longer exists.
+- `quote(listing: Listing, buyer: Seller, amount: String) : returns (seller: Seller, terms: String)`
+  - Refuses `INVALID_LISTING`: Choose an available offer-enabled listing and a valid amount.
+- `freeze(listing: Listing) : returns (listing: Listing)`
+- `update(seller: Seller, listing: Listing, details: String, previous: String) : returns (listing: Listing)`
+  - Refuses `LISTING_LOCKED`: Payment sent and sold listings cannot be edited.
+  - Refuses `INVALID_LISTING`: Reopen the listing and check your changes.
 
 #### Queries
 
+- `_visible(reader: Seller) : many (listing: Listing, seller: Seller, details: String)`
 - `_all() : many (listing: Listing, seller: Seller, details: String)`
 - `_publicAll() : many (listing: Listing, seller: Seller, details: String)`
 - `_get(listing: Listing) : optional (seller: Seller, details: String)`
@@ -85,8 +98,54 @@ Defined in [Listing](../design/concepts/Listing.md), line 1.
 
 #### Instances
 
-- `Listing` — instance of `Listing` — [Claimed application types](../design/types.md), line 13.
-  - `Seller` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 14.
+- `Listing` — instance of `Listing` — [Claimed application types](../design/types.md), line 21.
+  - `Seller` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 22.
+
+### Messaging
+
+Defined in [Messaging](../design/concepts/Messaging.md), line 1.
+
+#### Actions
+
+- `send(actor: Actor, buyer: Actor, seller: Actor, subject: Subject, text: String) : returns (message: Message)`
+  - Refuses `INVALID_MESSAGE`: Write a valid message in your own conversation.
+
+#### Queries
+
+- `_conversations(actor: Actor) : many (subject: Subject, buyer: Actor, seller: Actor, message: Message, text: String, sentAt: String)`
+- `_thread(actor: Actor, subject: Subject, buyer: Actor) : many (message: Message, subject: Subject, buyer: Actor, seller: Actor, sender: Actor, text: String, sentAt: String)`
+- `_history(actor: Actor, subject: Subject, buyer: Actor, before: String) : many (message: Message, subject: Subject, buyer: Actor, seller: Actor, sender: Actor, text: String, sentAt: String)`
+- `_inbox(actor: Actor) : many (message: Message, subject: Subject, buyer: Actor, seller: Actor, sender: Actor, text: String, sentAt: String)`
+
+#### Instances
+
+- `Messaging` — instance of `Messaging` — [Claimed application types](../design/types.md), line 10.
+  - `Actor` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 11.
+  - `Subject` is `Listing.Listing` — [Claimed application types](../design/types.md), line 12.
+
+### Negotiating
+
+Defined in [Negotiating](../design/concepts/Negotiating.md), line 1.
+
+#### Actions
+
+- `propose(buyer: Actor, seller: Actor, subject: Subject, terms: String) : returns (offer: Offer)`
+  - Refuses `INVALID_OFFER`: You cannot offer on your own listing.
+- `resolve(actor: Actor, offer: Offer, decision: String) : returns (offer: Offer)`
+  - Refuses `INVALID_OFFER`: Only the seller can decline and only the buyer can withdraw a pending offer.
+- `close(subject: Subject, buyer: Actor, terms: String) : returns (subject: Subject)`
+- `select(actor: Actor, offer: Offer) : returns (buyer: Actor, subject: Subject, terms: String)`
+  - Refuses `INVALID_OFFER`: Only the seller can select pending offer terms.
+
+#### Queries
+
+- `_inbox(actor: Actor) : many (offer: Offer, buyer: Actor, seller: Actor, subject: Subject, terms: String, status: String)`
+
+#### Instances
+
+- `Negotiating` — instance of `Negotiating` — [Claimed application types](../design/types.md), line 6.
+  - `Actor` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 7.
+  - `Subject` is `Listing.Listing` — [Claimed application types](../design/types.md), line 8.
 
 ### Sessioning
 
@@ -106,8 +165,8 @@ Defined in [Sessioning](../design/concepts/Sessioning.md), line 1.
 
 #### Instances
 
-- `Sessioning` — instance of `Sessioning` — [Claimed application types](../design/types.md), line 10.
-  - `Subject` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 11.
+- `Sessioning` — instance of `Sessioning` — [Claimed application types](../design/types.md), line 18.
+  - `Subject` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 19.
 
 ### TransactionConfirming
 
@@ -115,6 +174,11 @@ Defined in [TransactionConfirming](../design/concepts/TransactionConfirming.md),
 
 #### Actions
 
+- `startWithTerms(payer: Payer, payee: Payee, subject: Subject, terms: String) : returns (subject: Subject)`
+  - Refuses `INVALID_TRANSACTION`: A transaction already exists.
+- `report(payer: Payer, subject: Subject, data: String, mime: String) : returns (subject: Subject)`
+  - Refuses `INVALID_IMAGE`: Choose a JPEG, PNG, or WebP up to 5 MB.
+  - Refuses `INVALID_TRANSACTION`: Attach valid evidence to your unpaid transaction.
 - `start(payer: Payer, payee: Payee, subject: Subject) : returns (subject: Subject)`
   - Refuses `INVALID_TRANSACTION`: A transaction already exists for this item.
 - `reportPaid(payer: Payer, subject: Subject) : returns (subject: Subject)`
@@ -126,15 +190,16 @@ Defined in [TransactionConfirming](../design/concepts/TransactionConfirming.md),
 
 #### Queries
 
+- `_private(subject: Subject, actor: Actor) : optional (terms: String, evidence: String)`
 - `_get(subject: Subject) : optional (payer: Payer, payee: Payee, status: String)`
 
 #### Instances
 
-- `TransactionConfirming` — instance of `TransactionConfirming` — [Claimed application types](../design/types.md), line 20.
-  - `Actor` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 21.
-  - `Payee` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 23.
-  - `Payer` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 22.
-  - `Subject` is `Listing.Listing` — [Claimed application types](../design/types.md), line 24.
+- `TransactionConfirming` — instance of `TransactionConfirming` — [Claimed application types](../design/types.md), line 28.
+  - `Actor` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 29.
+  - `Payee` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 31.
+  - `Payer` is `Authenticating.Account` — [Claimed application types](../design/types.md), line 30.
+  - `Subject` is `Listing.Listing` — [Claimed application types](../design/types.md), line 32.
 
 ## Views
 
@@ -160,10 +225,142 @@ Authored path: `Marketplace.Workflow.BuyerDenied`.
   where Listing._mayBuy (buyer, listing) has (allowed: false)
 ```
 
+### listing edits are closed
+
+Authored path: `Marketplace.Workflow.EditingBlocked`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 47.
+
+```view
+listing edits are closed — inputs (listing); outputs (); bindings ()
+  where Claiming._get (resource: listing) has (status: "completed")
+  where TransactionConfirming._get (subject: listing) has (status: "awaitingConfirmation")
+  where TransactionConfirming._get (subject: listing) has (status: "confirmed")
+```
+
+### private payment snapshot
+
+Authored path: `Marketplace.Workflow.PaymentSnapshot`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 45.
+
+```view
+private payment snapshot — inputs (user, listing); outputs (terms, evidence, details); bindings () — answers at most one (terms, evidence, details)
+  where
+    TransactionConfirming._private (actor: user, subject: listing) has (evidence, terms)
+    Listing._get (listing) has (details)
+```
+
 ## Formers
 
 _Formers name result shapes evaluated when asked. The source former owns_
 _the authored explanation; this section records the generated shape._
+
+### my conversation summaries
+
+Authored path: `Messages.Conversations.ConversationList`.
+- Covered by [Messages](../design/compositions/Messages.md), line 11.
+
+```former
+Former "my conversation summaries" — inputs (user); bindings (listing, buyer, seller, message, text, sentAt); promises exactly one record — forms:
+  a record of
+    conversations: each Messaging._conversations (actor: user) has (buyer, message, seller, sentAt, subject: listing, text)
+      form a record of
+        buyer
+        listing
+        message
+        seller
+        sentAt
+        text
+```
+
+### my messages
+
+Authored path: `Messages.Conversations.Inbox`.
+- Covered by [Messages](../design/compositions/Messages.md), line 2.
+
+```former
+Former "my messages" — inputs (user); bindings (message, listing, buyer, seller, sender, text, sentAt); promises exactly one record — forms:
+  a record of
+    messages: each Messaging._inbox (actor: user) has (buyer, message, seller, sender, sentAt, subject: listing, text)
+      form a record of
+        buyer
+        listing
+        message
+        seller
+        sender
+        sentAt
+        text
+```
+
+### my offers
+
+Authored path: `Marketplace.Workflow.Offers`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```former
+Former "my offers" — inputs (user); bindings (offer, buyer, seller, listing, terms, status); promises exactly one record — forms:
+  a record of
+    offers: each Negotiating._inbox (actor: user) has (buyer, offer, seller, status, subject: listing, terms)
+      form a record of
+        buyer
+        listing
+        offer
+        seller
+        status
+        terms
+```
+
+### paged private conversation history
+
+Authored path: `Messages.Conversations.HistoryMessages`.
+- Covered by [Messages](../design/compositions/Messages.md), line 13.
+
+```former
+Former "paged private conversation history" — inputs (user, listing, buyer, before); bindings (message, seller, sender, text, sentAt); promises exactly one record — forms:
+  a record of
+    messages: each Messaging._history (actor: user, before, buyer, subject: listing) has (message, seller, sender, sentAt, text)
+      form a record of
+        buyer
+        listing
+        message
+        seller
+        sender
+        sentAt
+        text
+```
+
+### private conversation history
+
+Authored path: `Messages.Conversations.ThreadMessages`.
+- Covered by [Messages](../design/compositions/Messages.md), line 11.
+
+```former
+Former "private conversation history" — inputs (user, listing, buyer); bindings (message, seller, sender, text, sentAt); promises exactly one record — forms:
+  a record of
+    messages: each Messaging._thread (actor: user, buyer, subject: listing) has (message, seller, sender, sentAt, text)
+      form a record of
+        buyer
+        listing
+        message
+        seller
+        sender
+        sentAt
+        text
+```
+
+### private transaction details
+
+Authored path: `Marketplace.Workflow.PrivateTransaction`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
+
+```former
+Former "private transaction details" — inputs (user, listing); bindings (terms, evidence, details); promises exactly one record — forms:
+  a record of
+    payment: a record of
+      where whether view "private payment snapshot" with (listing, user) has (details, evidence, terms)
+      details
+      evidence
+      terms
+```
 
 ### the marketplace
 
@@ -171,9 +368,9 @@ Authored path: `Marketplace.Workflow.Marketplace`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 11.
 
 ```former
-Former "the marketplace" — inputs (); bindings (listing, seller, details, status, claimer, paymentStatus, payer, payee); promises exactly one record — forms:
+Former "the marketplace" — inputs (user); bindings (listing, seller, details, status, claimer, paymentStatus, payer, payee); promises exactly one record — forms:
   a record of
-    listings: each Listing._all () has (details, listing, seller)
+    listings: each Listing._visible (reader: user) has (details, listing, seller)
       form a record of
         claim: a record of
           where Claiming._get (resource: listing) has (claimer, status)
@@ -192,7 +389,7 @@ Former "the marketplace" — inputs (); bindings (listing, seller, details, stat
 ### the public marketplace
 
 Authored path: `Marketplace.Workflow.PublicMarketplace`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 34.
 
 ```former
 Former "the public marketplace" — inputs (); bindings (listing, seller, details, status); promises exactly one record — forms:
@@ -270,11 +467,63 @@ then
   RequestBoundary.respond (image, requestId)
 ```
 
+### Marketplace.Workflow.AcceptOffer
+
+Authored path: `Marketplace.Workflow.AcceptOffer`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when RequestBoundary.request (offer, path: "/marketplace/accept-offer", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.AcceptOffer#2
+
+Authored path: `Marketplace.Workflow.AcceptOffer`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.AcceptOffer
+where
+  earlier, RequestBoundary.request (offer, path: "/marketplace/accept-offer", requestId, session)
+then
+  Negotiating.select (actor: user, offer)
+```
+
+### Marketplace.Workflow.AcceptOffer#3
+
+Authored path: `Marketplace.Workflow.AcceptOffer`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Negotiating.select (actor: user, offer, buyer, subject: listing, terms), asked by Marketplace.Workflow.AcceptOffer#2
+then
+  Claiming.reserve (claimer: buyer, resource: listing, terms)
+```
+
+### Marketplace.Workflow.AcceptOffer#4
+
+Authored path: `Marketplace.Workflow.AcceptOffer`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Claiming.reserve (claimer: buyer, resource: listing, terms), asked by Marketplace.Workflow.AcceptOffer#3
+where
+  earlier, RequestBoundary.request (offer, path: "/marketplace/accept-offer", requestId, session)
+then
+  RequestBoundary.respond (listing, requestId)
+```
+
 ### Marketplace.Workflow.Activity
 
 Authored path: `Marketplace.Workflow.Activity`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 18.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 34.
 
 ```reaction
 when RequestBoundary.request (path: "/marketplace/activity", requestId, session)
@@ -286,14 +535,14 @@ then
 
 Authored path: `Marketplace.Workflow.Activity`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 18.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 34.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Activity
 where
   earlier, RequestBoundary.request (path: "/marketplace/activity", requestId, session)
 then
-  RequestBoundary.respond (marketplace: former "the marketplace", requestId)
+  RequestBoundary.respond (marketplace: former "the marketplace" with (user), requestId)
 ```
 
 ### Marketplace.Workflow.Browse
@@ -312,7 +561,7 @@ then
 
 Authored path: `Marketplace.Workflow.Cancel`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 15.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/cancel", requestId, session)
@@ -324,7 +573,7 @@ then
 
 Authored path: `Marketplace.Workflow.Cancel`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 15.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Cancel
@@ -338,7 +587,7 @@ then
 
 Authored path: `Marketplace.Workflow.Cancel`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 15.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
 
 ```reaction
 when TransactionConfirming.cancel (actor: user, subject: listing), asked by Marketplace.Workflow.Cancel#2
@@ -352,7 +601,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/claim", requestId, session)
@@ -364,7 +613,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Claim
@@ -372,17 +621,29 @@ where
   earlier, RequestBoundary.request (listing, path: "/marketplace/claim", requestId, session)
   view "(buyer) may buy (listing)" with (buyer: user, listing)
 then
-  Claiming.claim (claimer: user, resource: listing)
+  Listing.quote (amount: "", buyer: user, listing)
 ```
 
 ### Marketplace.Workflow.Claim:allowed#3
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
 
 ```reaction
-when Claiming.claim (claimer: user, resource: listing), asked by Marketplace.Workflow.Claim:allowed#2
+when Listing.quote (amount: "", buyer: user, listing, seller, terms), asked by Marketplace.Workflow.Claim:allowed#2
+then
+  Claiming.reserve (claimer: user, resource: listing, terms)
+```
+
+### Marketplace.Workflow.Claim:allowed#4
+
+Authored path: `Marketplace.Workflow.Claim`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+
+```reaction
+when Claiming.reserve (claimer: user, resource: listing, terms), asked by Marketplace.Workflow.Claim:allowed#3
 where
   earlier, RequestBoundary.request (listing, path: "/marketplace/claim", requestId, session)
 then
@@ -393,7 +654,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Claim
@@ -402,6 +663,17 @@ where
   view "(buyer) may not buy (listing)" with (buyer: user, listing)
 then
   RequestBoundary.respond (error: "CANNOT_BUY", requestId)
+```
+
+### Marketplace.Workflow.CloseOffers
+
+Authored path: `Marketplace.Workflow.CloseOffers`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 43.
+
+```reaction
+when Claiming.reserve (claimer: buyer, resource: listing, terms)
+then
+  Negotiating.close (buyer, subject: listing, terms)
 ```
 
 ### Marketplace.Workflow.CompleteClaim
@@ -421,7 +693,7 @@ then
 
 Authored path: `Marketplace.Workflow.Confirm`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/confirm", requestId, session)
@@ -433,7 +705,7 @@ then
 
 Authored path: `Marketplace.Workflow.Confirm`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Confirm
@@ -447,7 +719,7 @@ then
 
 Authored path: `Marketplace.Workflow.Confirm`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
 
 ```reaction
 when TransactionConfirming.confirmReceived (payee: user, subject: listing), asked by Marketplace.Workflow.Confirm#2
@@ -455,6 +727,84 @@ where
   earlier, RequestBoundary.request (listing, path: "/marketplace/confirm", requestId, session)
 then
   RequestBoundary.respond (listing, requestId)
+```
+
+### Marketplace.Workflow.Edit
+
+Authored path: `Marketplace.Workflow.Edit`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 37.
+
+```reaction
+when RequestBoundary.request (details, listing, path: "/marketplace/edit", previous, requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.Edit:editable#2
+
+Authored path: `Marketplace.Workflow.Edit`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 37.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Edit
+where
+  earlier, RequestBoundary.request (details, listing, path: "/marketplace/edit", previous, requestId, session)
+  no view "listing edits are closed" with (listing)
+then
+  Listing.update (details, listing, previous, seller: user)
+```
+
+### Marketplace.Workflow.Edit:editable#3
+
+Authored path: `Marketplace.Workflow.Edit`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 37.
+
+```reaction
+when Listing.update (details, listing, previous, seller: user), asked by Marketplace.Workflow.Edit:editable#2
+where
+  earlier, RequestBoundary.request (details, listing, path: "/marketplace/edit", previous, requestId, session)
+then
+  RequestBoundary.respond (listing, requestId)
+```
+
+### Marketplace.Workflow.Edit:locked#2
+
+Authored path: `Marketplace.Workflow.Edit`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 37.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Edit
+where
+  earlier, RequestBoundary.request (details, listing, path: "/marketplace/edit", previous, requestId, session)
+  view "listing edits are closed" with (listing)
+then
+  RequestBoundary.respond (error: "LISTING_LOCKED", requestId)
+```
+
+### Marketplace.Workflow.FreezeReported
+
+Authored path: `Marketplace.Workflow.FreezeReported`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 47.
+
+```reaction
+when TransactionConfirming.report (subject: listing)
+then
+  Listing.freeze (listing)
+```
+
+### Marketplace.Workflow.FreezeReportedLegacy
+
+Authored path: `Marketplace.Workflow.FreezeReportedLegacy`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 47.
+
+```reaction
+when TransactionConfirming.reportPaid (subject: listing)
+then
+  Listing.freeze (listing)
 ```
 
 ### Marketplace.Workflow.MakeAvailable
@@ -466,6 +816,125 @@ Authored path: `Marketplace.Workflow.MakeAvailable`.
 when Listing.create (listing)
 then
   Claiming.makeAvailable (resource: listing)
+```
+
+### Marketplace.Workflow.OfferList
+
+Authored path: `Marketplace.Workflow.OfferList`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 28.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when RequestBoundary.request (path: "/marketplace/offers", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.OfferList#2
+
+Authored path: `Marketplace.Workflow.OfferList`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 28.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.OfferList
+where
+  earlier, RequestBoundary.request (path: "/marketplace/offers", requestId, session)
+then
+  RequestBoundary.respond (inbox: former "my offers" with (user), requestId)
+```
+
+### Marketplace.Workflow.Payment
+
+Authored path: `Marketplace.Workflow.Payment`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
+
+```reaction
+when RequestBoundary.request (listing, path: "/marketplace/payment", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.Payment#2
+
+Authored path: `Marketplace.Workflow.Payment`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Payment
+where
+  earlier, RequestBoundary.request (listing, path: "/marketplace/payment", requestId, session)
+then
+  RequestBoundary.respond (requestId, transaction: former "private transaction details" with (listing, user))
+```
+
+### Marketplace.Workflow.Propose
+
+Authored path: `Marketplace.Workflow.Propose`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when RequestBoundary.request (amount, listing, path: "/marketplace/offer", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.Propose#2
+
+Authored path: `Marketplace.Workflow.Propose`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Propose
+where
+  earlier, RequestBoundary.request (amount, listing, path: "/marketplace/offer", requestId, session)
+then
+  Claiming.checkAvailable (resource: listing)
+```
+
+### Marketplace.Workflow.Propose#3
+
+Authored path: `Marketplace.Workflow.Propose`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Claiming.checkAvailable (resource: listing), asked by Marketplace.Workflow.Propose#2
+where
+  earlier, Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Propose
+  earlier, RequestBoundary.request (amount, listing, path: "/marketplace/offer", requestId, session)
+then
+  Listing.quote (amount, buyer: user, listing)
+```
+
+### Marketplace.Workflow.Propose#4
+
+Authored path: `Marketplace.Workflow.Propose`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Listing.quote (amount, buyer: user, listing, seller, terms), asked by Marketplace.Workflow.Propose#3
+then
+  Negotiating.propose (buyer: user, seller, subject: listing, terms)
+```
+
+### Marketplace.Workflow.Propose#5
+
+Authored path: `Marketplace.Workflow.Propose`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Negotiating.propose (buyer: user, seller, subject: listing, terms, offer), asked by Marketplace.Workflow.Propose#4
+where
+  earlier, RequestBoundary.request (amount, listing, path: "/marketplace/offer", requestId, session)
+then
+  RequestBoundary.respond (offer, requestId)
 ```
 
 ### Marketplace.Workflow.Publish
@@ -519,11 +988,51 @@ then
   Claiming.release (claimer: buyer, resource: listing)
 ```
 
+### Marketplace.Workflow.ReportEvidence
+
+Authored path: `Marketplace.Workflow.ReportEvidence`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
+
+```reaction
+when RequestBoundary.request (data, listing, mime, path: "/marketplace/report-evidence", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.ReportEvidence#2
+
+Authored path: `Marketplace.Workflow.ReportEvidence`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.ReportEvidence
+where
+  earlier, RequestBoundary.request (data, listing, mime, path: "/marketplace/report-evidence", requestId, session)
+then
+  TransactionConfirming.report (data, mime, payer: user, subject: listing)
+```
+
+### Marketplace.Workflow.ReportEvidence#3
+
+Authored path: `Marketplace.Workflow.ReportEvidence`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
+
+```reaction
+when TransactionConfirming.report (data, mime, payer: user, subject: listing), asked by Marketplace.Workflow.ReportEvidence#2
+where
+  earlier, RequestBoundary.request (data, listing, mime, path: "/marketplace/report-evidence", requestId, session)
+then
+  RequestBoundary.respond (listing, requestId)
+```
+
 ### Marketplace.Workflow.ReportPaid
 
 Authored path: `Marketplace.Workflow.ReportPaid`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/report-paid", requestId, session)
@@ -535,7 +1044,7 @@ then
 
 Authored path: `Marketplace.Workflow.ReportPaid`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.ReportPaid
@@ -549,7 +1058,7 @@ then
 
 Authored path: `Marketplace.Workflow.ReportPaid`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when TransactionConfirming.reportPaid (payer: user, subject: listing), asked by Marketplace.Workflow.ReportPaid#2
@@ -559,17 +1068,217 @@ then
   RequestBoundary.respond (listing, requestId)
 ```
 
+### Marketplace.Workflow.ResolveOffer
+
+Authored path: `Marketplace.Workflow.ResolveOffer`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when RequestBoundary.request (decision, offer, path: "/marketplace/resolve-offer", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.ResolveOffer#2
+
+Authored path: `Marketplace.Workflow.ResolveOffer`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.ResolveOffer
+where
+  earlier, RequestBoundary.request (decision, offer, path: "/marketplace/resolve-offer", requestId, session)
+then
+  Negotiating.resolve (actor: user, decision, offer)
+```
+
+### Marketplace.Workflow.ResolveOffer#3
+
+Authored path: `Marketplace.Workflow.ResolveOffer`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
+
+```reaction
+when Negotiating.resolve (actor: user, decision, offer), asked by Marketplace.Workflow.ResolveOffer#2
+where
+  earlier, RequestBoundary.request (decision, offer, path: "/marketplace/resolve-offer", requestId, session)
+then
+  RequestBoundary.respond (offer, requestId)
+```
+
 ### Marketplace.Workflow.StartTransaction
 
 Authored path: `Marketplace.Workflow.StartTransaction`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 7.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
 
 ```reaction
-when Claiming.claim (claimer: buyer, resource: listing)
+when Claiming.reserve (claimer: buyer, resource: listing, terms)
 where
   Listing._get (listing) has (seller)
 then
-  TransactionConfirming.start (payee: seller, payer: buyer, subject: listing)
+  TransactionConfirming.startWithTerms (payee: seller, payer: buyer, subject: listing, terms)
+```
+
+### Messages.Conversations.Conversations
+
+Authored path: `Messages.Conversations.Conversations`.
+- Covered by [Messages](../design/compositions/Messages.md), line 6.
+- Covered by [Messages](../design/compositions/Messages.md), line 11.
+
+```reaction
+when RequestBoundary.request (path: "/messages/conversations", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Messages.Conversations.Conversations#2
+
+Authored path: `Messages.Conversations.Conversations`.
+- Covered by [Messages](../design/compositions/Messages.md), line 6.
+- Covered by [Messages](../design/compositions/Messages.md), line 11.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Messages.Conversations.Conversations
+where
+  earlier, RequestBoundary.request (path: "/messages/conversations", requestId, session)
+then
+  RequestBoundary.respond (inbox: former "my conversation summaries" with (user), requestId)
+```
+
+### Messages.Conversations.History
+
+Authored path: `Messages.Conversations.History`.
+- Covered by [Messages](../design/compositions/Messages.md), line 8.
+- Covered by [Messages](../design/compositions/Messages.md), line 13.
+
+```reaction
+when RequestBoundary.request (before, buyer, listing, path: "/messages/history", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Messages.Conversations.History#2
+
+Authored path: `Messages.Conversations.History`.
+- Covered by [Messages](../design/compositions/Messages.md), line 8.
+- Covered by [Messages](../design/compositions/Messages.md), line 13.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Messages.Conversations.History
+where
+  earlier, RequestBoundary.request (before, buyer, listing, path: "/messages/history", requestId, session)
+then
+  RequestBoundary.respond (conversation: former "paged private conversation history" with (before, buyer, listing, user), requestId)
+```
+
+### Messages.Conversations.List
+
+Authored path: `Messages.Conversations.List`.
+- Covered by [Messages](../design/compositions/Messages.md), line 2.
+- Covered by [Messages](../design/compositions/Messages.md), line 4.
+
+```reaction
+when RequestBoundary.request (path: "/messages/list", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Messages.Conversations.List#2
+
+Authored path: `Messages.Conversations.List`.
+- Covered by [Messages](../design/compositions/Messages.md), line 2.
+- Covered by [Messages](../design/compositions/Messages.md), line 4.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Messages.Conversations.List
+where
+  earlier, RequestBoundary.request (path: "/messages/list", requestId, session)
+then
+  RequestBoundary.respond (inbox: former "my messages" with (user), requestId)
+```
+
+### Messages.Conversations.Send
+
+Authored path: `Messages.Conversations.Send`.
+- Covered by [Messages](../design/compositions/Messages.md), line 2.
+- Covered by [Messages](../design/compositions/Messages.md), line 5.
+
+```reaction
+when RequestBoundary.request (buyer, listing, path: "/messages/send", requestId, session, text)
+then
+  Sessioning.current (session)
+```
+
+### Messages.Conversations.Send#2
+
+Authored path: `Messages.Conversations.Send`.
+- Covered by [Messages](../design/compositions/Messages.md), line 2.
+- Covered by [Messages](../design/compositions/Messages.md), line 5.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Messages.Conversations.Send
+where
+  earlier, RequestBoundary.request (buyer, listing, path: "/messages/send", requestId, session, text)
+then
+  Listing.owner (listing)
+```
+
+### Messages.Conversations.Send#3
+
+Authored path: `Messages.Conversations.Send`.
+- Covered by [Messages](../design/compositions/Messages.md), line 2.
+- Covered by [Messages](../design/compositions/Messages.md), line 5.
+
+```reaction
+when Listing.owner (listing, seller), asked by Messages.Conversations.Send#2
+where
+  earlier, Sessioning.current (session, subject: user), asked by Messages.Conversations.Send
+  earlier, RequestBoundary.request (buyer, listing, path: "/messages/send", requestId, session, text)
+then
+  Messaging.send (actor: user, buyer, seller, subject: listing, text)
+```
+
+### Messages.Conversations.Send#4
+
+Authored path: `Messages.Conversations.Send`.
+- Covered by [Messages](../design/compositions/Messages.md), line 2.
+- Covered by [Messages](../design/compositions/Messages.md), line 5.
+
+```reaction
+when Messaging.send (actor: user, buyer, seller, subject: listing, text, message), asked by Messages.Conversations.Send#3
+where
+  earlier, RequestBoundary.request (buyer, listing, path: "/messages/send", requestId, session, text)
+then
+  RequestBoundary.respond (message, requestId)
+```
+
+### Messages.Conversations.Thread
+
+Authored path: `Messages.Conversations.Thread`.
+- Covered by [Messages](../design/compositions/Messages.md), line 7.
+- Covered by [Messages](../design/compositions/Messages.md), line 11.
+
+```reaction
+when RequestBoundary.request (buyer, listing, path: "/messages/thread", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Messages.Conversations.Thread#2
+
+Authored path: `Messages.Conversations.Thread`.
+- Covered by [Messages](../design/compositions/Messages.md), line 7.
+- Covered by [Messages](../design/compositions/Messages.md), line 11.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Messages.Conversations.Thread
+where
+  earlier, RequestBoundary.request (buyer, listing, path: "/messages/thread", requestId, session)
+then
+  RequestBoundary.respond (conversation: former "private conversation history" with (buyer, listing, user), requestId)
 ```
 
 ### Sessions.CurrentAccount.CurrentUser
@@ -712,9 +1421,21 @@ not listed here have no explicit input contract.
 - `/auth/sign-in` — requires `username`, `password`
 - `/auth/sign-out` — requires `session`
 - `/images/upload` — requires `session`, `data`, `mime`
+- `/marketplace/accept-offer` — requires `session`, `offer`
 - `/marketplace/activity` — requires `session`
 - `/marketplace/cancel` — requires `session`, `listing`
 - `/marketplace/claim` — requires `session`, `listing`
 - `/marketplace/confirm` — requires `session`, `listing`
+- `/marketplace/edit` — requires `session`, `listing`, `details`, `previous`
+- `/marketplace/offer` — requires `session`, `listing`, `amount`
+- `/marketplace/offers` — requires `session`
+- `/marketplace/payment` — requires `session`, `listing`
 - `/marketplace/publish` — requires `session`, `details`
+- `/marketplace/report-evidence` — requires `session`, `listing`, `data`, `mime`
 - `/marketplace/report-paid` — requires `session`, `listing`
+- `/marketplace/resolve-offer` — requires `session`, `offer`, `decision`
+- `/messages/conversations` — requires `session`
+- `/messages/history` — requires `session`, `listing`, `buyer`, `before`
+- `/messages/list` — requires `session`
+- `/messages/send` — requires `session`, `listing`, `buyer`, `text`
+- `/messages/thread` — requires `session`, `listing`, `buyer`

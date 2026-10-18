@@ -17,6 +17,7 @@ external Resource
 a set of Resources with
   a status String
   a claimer Claimer
+  a terms String
 ```
 ## Actions
 ```actions
@@ -36,6 +37,22 @@ claim (claimer: Claimer, resource: Resource) : returns (resource: Resource)
   then
     atomically set status to claimed and claimer to claimer
     returns resource
+checkAvailable (resource: Resource) : returns (resource: Resource)
+  where resource is not available
+  then
+    refuses CLAIM_UNAVAILABLE "This item is no longer available."
+  where resource is available
+  then
+    bind resource to itself
+    returns resource
+reserve (claimer: Claimer, resource: Resource, terms: String) : returns (resource: Resource, claimer: Claimer, terms: String)
+  where resource is not available
+  then
+    refuses CLAIM_UNAVAILABLE "This item is no longer available."
+  where resource is available
+  then
+    atomically claim resource for claimer with immutable terms
+    returns resource, claimer, terms
 release (claimer: Claimer, resource: Resource) : returns (resource: Resource)
   where resource is not claimed by claimer
   then

@@ -2,7 +2,7 @@ import { MongoClient, MongoServerError } from 'mongodb';
 export class ClaimUnavailable extends Error {}
 export class ClaimingConcept {
   private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly rows = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ resource: string; status: string; claimer: string }>('claims');
+  private readonly rows = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ resource: string; status: string; claimer: string; terms?: string }>('claims');
   async makeAvailable({ resource }: { resource: string }) {
     await this.rows.createIndex({ resource: 1 }, { unique: true });
     try { await this.rows.insertOne({ resource, status: 'available', claimer: '' }); }
@@ -14,13 +14,22 @@ export class ClaimingConcept {
     if (!result.modifiedCount) throw new ClaimUnavailable('This item is no longer available.');
     return { resource };
   }
+  async checkAvailable({ resource }: { resource: string }) {
+    if (!await this.rows.findOne({ resource, status: 'available' })) throw new ClaimUnavailable('This item is no longer available.');
+    return { resource };
+  }
+  async reserve({ claimer, resource, terms }: { claimer: string; resource: string; terms: string }) {
+    const result = await this.rows.updateOne({ resource, status: 'available' }, { $set: { status: 'claimed', claimer, terms } });
+    if (!result.modifiedCount) throw new ClaimUnavailable('This item is no longer available.');
+    return { resource, claimer, terms };
+  }
   async complete({ claimer, resource }: { claimer: string; resource: string }) {
     const result = await this.rows.updateOne({ resource, status: 'claimed', claimer }, { $set: { status: 'completed' } });
     if (!result.modifiedCount) throw new ClaimUnavailable('This claim cannot be completed.');
     return { resource };
   }
   async release({ claimer, resource }: { claimer: string; resource: string }) {
-    const result = await this.rows.updateOne({ resource, status: 'claimed', claimer }, { $set: { status: 'available', claimer: '' } });
+    const result = await this.rows.updateOne({ resource, status: 'claimed', claimer }, { $set: { status: 'available', claimer: '', terms: '' } });
     if (!result.modifiedCount) throw new ClaimUnavailable('Only the current claimer can release a reserved item.');
     return { resource };
   }

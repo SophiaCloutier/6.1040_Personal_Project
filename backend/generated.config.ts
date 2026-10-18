@@ -6,7 +6,7 @@ export default {
   assemble: assembleApplication,
   title: "Claimed",
   wireName: 'ClaimedWire',
-  design: { version: 1, documents: [new URL('./design/types.md', import.meta.url), new URL('./design/compositions/Sessions.md', import.meta.url), new URL('./design/compositions/Marketplace.md', import.meta.url), new URL('./design/compositions/Images.md', import.meta.url)] },
+  design: { version: 1, documents: [new URL('./design/compositions/Messages.md', import.meta.url), new URL('./design/types.md', import.meta.url), new URL('./design/compositions/Sessions.md', import.meta.url), new URL('./design/compositions/Marketplace.md', import.meta.url), new URL('./design/compositions/Images.md', import.meta.url)] },
   projections: [httpWire({ policy, name: 'ClaimedWireHttp' })],
 };
 

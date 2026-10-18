@@ -7,7 +7,7 @@ import { serveUploadedImage } from './image-host.ts';
 const application = assembleApplication();
 const gateway = createGateway({ application });
 const handler = createHttpHandler({ application, gateway, policy });
-const server = Bun.serve({ hostname: 'localhost', port: 3000, maxRequestBodySize: 8 * 1024 * 1024, async fetch(request) {
+const server = Bun.serve({ hostname: 'localhost', port: Number(process.env.PORT ?? 3000), maxRequestBodySize: 8 * 1024 * 1024, async fetch(request) {
   const path = new URL(request.url).pathname;
   if (path.startsWith('/api/')) return handler(request);
   if (request.method !== 'GET') return new Response('Method not allowed', { status: 405 });

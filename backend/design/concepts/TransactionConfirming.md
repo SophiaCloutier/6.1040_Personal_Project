@@ -2,7 +2,7 @@
 ## Purpose
 Record shared confirmation that an external payment occurred.
 ## Principle
-A transaction starts awaiting payment, its payer reports payment, then its payee confirms receipt. Before payment is reported, either party may cancel the transaction, allowing a new one for the same subject.
+A transaction starts awaiting payment, its payer reports payment (with evidence if required by the saved terms), then its payee confirms receipt. Before payment is reported, either party may cancel the transaction, allowing a new one for the same subject.
 ## Types
 
 ```types
@@ -23,9 +23,30 @@ a set of Transactions with
   a payee Payee
   a subject Subject
   a status String
+  a terms String
+  an evidence String
 ```
 ## Actions
 ```actions
+startWithTerms (payer: Payer, payee: Payee, subject: Subject, terms: String) : returns (subject: Subject)
+  where subject has a transaction
+  then
+    refuses INVALID_TRANSACTION "A transaction already exists."
+  where subject has no transaction
+  then
+    create an awaitingPayment transaction with immutable terms and empty evidence
+    returns subject
+report (payer: Payer, subject: Subject, data: String, mime: String) : returns (subject: Subject)
+  where image data is invalid
+  then
+    refuses INVALID_IMAGE "Choose a JPEG, PNG, or WebP up to 5 MB."
+  where payer is not buyer of an unpaid transaction or required evidence is missing
+  then
+    refuses INVALID_TRANSACTION "Attach valid evidence to your unpaid transaction."
+  where transaction belongs to payer and evidence satisfies its terms
+  then
+    sanitize any image and atomically change awaitingPayment to awaitingConfirmation with private evidence
+    returns subject
 start (payer: Payer, payee: Payee, subject: Subject) : returns (subject: Subject)
   where subject already has a transaction
   then
@@ -35,10 +56,10 @@ start (payer: Payer, payee: Payee, subject: Subject) : returns (subject: Subject
     create a transaction awaitingPayment with payer and payee
     returns subject
 reportPaid (payer: Payer, subject: Subject) : returns (subject: Subject)
-  where subject is not awaitingPayment for payer
+  where subject is not awaitingPayment for payer or saved terms require evidence
   then
     refuses INVALID_TRANSACTION "Only the buyer can report payment on an unpaid transaction."
-  where subject is awaitingPayment for payer
+  where subject is awaitingPayment for payer and saved terms do not require evidence
   then
     set status to awaitingConfirmation
     returns subject
@@ -61,9 +82,8 @@ confirmReceived (payee: Payee, subject: Subject) : returns (subject: Subject)
 ```
 ## Queries
 ```queries
+_private (subject: Subject, actor: Actor) : optional (terms: String, evidence: String)
+  answers saved terms and evidence only for payer or payee; legacy terms default to empty JSON
 _get (subject: Subject) : optional (payer: Payer, payee: Payee, status: String)
   answers the transaction or no rows when missing
 ```
-
-
-

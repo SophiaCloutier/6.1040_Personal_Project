@@ -67,6 +67,16 @@ export type ClaimedWire = {
     };
     error: { error: AppWideError | "INVALID_IMAGE" | "INVALID_INPUT" | "UNKNOWN_SESSION" };
   };
+  "/marketplace/accept-offer": {
+    input: {
+      "offer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["select"]>[0], ["offer"]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["reserve"]>[0], ["resource"]>>;
+    };
+    error: { error: AppWideError | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_OFFER" | "INVALID_TRANSACTION" | "UNKNOWN_SESSION" };
+  };
   "/marketplace/activity": {
     input: {
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
@@ -78,9 +88,9 @@ export type ClaimedWire = {
             "claimer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Claiming"]["_get"]>>>, ["claimer"]>>;
             "status": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Claiming"]["_get"]>>>, ["status"]>>;
           };
-          "details": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_all"]>>>, ["details"]>>;
-          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_all"]>>>, ["listing"]>>;
-          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_all"]>>>, ["seller"]>>;
+          "details": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_visible"]>>>, ["details"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_visible"]>>>, ["listing"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_visible"]>>>, ["seller"]>>;
           "transaction": {
             "payee": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_get"]>>>, ["payee"]>> | null;
             "payer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_get"]>>>, ["payer"]>> | null;
@@ -103,13 +113,13 @@ export type ClaimedWire = {
   };
   "/marketplace/claim": {
     input: {
-      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["claim"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_mayBuy"]>[0], ["listing"]>]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["reserve"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_mayBuy"]>[0], ["listing"]>]>>;
       "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
     };
     output: {
-      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["claim"]>[0], ["resource"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["reserve"]>[0], ["resource"]>>;
     };
-    error: { error: AppWideError | "CANNOT_BUY" | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_TRANSACTION" | "UNKNOWN_SESSION" };
+    error: { error: AppWideError | "CANNOT_BUY" | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_LISTING" | "INVALID_TRANSACTION" | "UNKNOWN_SESSION" };
   };
   "/marketplace/confirm": {
     input: {
@@ -120,6 +130,18 @@ export type ClaimedWire = {
       "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["confirmReceived"]>[0], ["subject"]>>;
     };
     error: { error: AppWideError | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_TRANSACTION" | "UNKNOWN_SESSION" };
+  };
+  "/marketplace/edit": {
+    input: {
+      "details": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["details"]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["_get"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_get"]>[0], ["subject"]>]>>;
+      "previous": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["previous"]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["listing"]>, AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>>, ["listing"]>]>>;
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "INVALID_LISTING" | "LISTING_LOCKED" | "UNKNOWN_SESSION" };
   };
   "/marketplace/list": {
     input: Record<string, never>;
@@ -137,6 +159,51 @@ export type ClaimedWire = {
     };
     error: { error: AppWideError };
   };
+  "/marketplace/offer": {
+    input: {
+      "amount": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["quote"]>[0], ["amount"]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["checkAvailable"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["propose"]>[0], ["subject"]>]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "offer": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["propose"]>>, ["offer"]>>;
+    };
+    error: { error: AppWideError | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_LISTING" | "INVALID_OFFER" | "UNKNOWN_SESSION" };
+  };
+  "/marketplace/offers": {
+    input: {
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "inbox": {
+        "offers": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["subject"]>>;
+          "offer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["offer"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["seller"]>>;
+          "status": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["status"]>>;
+          "terms": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["terms"]>>;
+        }[];
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
+  };
+  "/marketplace/payment": {
+    input: {
+      "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_private"]>[0], ["subject"]>]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "transaction": {
+        "payment": {
+          "details": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["details"]>> | null;
+          "evidence": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_private"]>>>, ["evidence"]>> | null;
+          "terms": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_private"]>>>, ["terms"]>> | null;
+        };
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
+  };
   "/marketplace/publish": {
     input: {
       "details": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["details"]>>;
@@ -147,6 +214,18 @@ export type ClaimedWire = {
     };
     error: { error: AppWideError | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_LISTING" | "UNKNOWN_SESSION" };
   };
+  "/marketplace/report-evidence": {
+    input: {
+      "data": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["data"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["subject"]>>;
+      "mime": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["mime"]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["subject"]>>;
+    };
+    error: { error: AppWideError | "INVALID_IMAGE" | "INVALID_INPUT" | "INVALID_TRANSACTION" | "UNKNOWN_SESSION" };
+  };
   "/marketplace/report-paid": {
     input: {
       "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["reportPaid"]>[0], ["subject"]>>;
@@ -156,6 +235,109 @@ export type ClaimedWire = {
       "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["reportPaid"]>[0], ["subject"]>>;
     };
     error: { error: AppWideError | "INVALID_INPUT" | "INVALID_TRANSACTION" | "UNKNOWN_SESSION" };
+  };
+  "/marketplace/resolve-offer": {
+    input: {
+      "decision": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["resolve"]>[0], ["decision"]>>;
+      "offer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["resolve"]>[0], ["offer"]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "offer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["resolve"]>[0], ["offer"]>>;
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "INVALID_OFFER" | "UNKNOWN_SESSION" };
+  };
+  "/messages/conversations": {
+    input: {
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "inbox": {
+        "conversations": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["seller"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
+  };
+  "/messages/history": {
+    input: {
+      "before": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["before"]>>;
+      "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["buyer"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["subject"]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "conversation": {
+        "messages": {
+          "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["buyer"]>>;
+          "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["seller"]>>;
+          "sender": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["sender"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
+  };
+  "/messages/list": {
+    input: {
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "inbox": {
+        "messages": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["seller"]>>;
+          "sender": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["sender"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
+  };
+  "/messages/send": {
+    input: {
+      "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>[0], ["buyer"]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["owner"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>[0], ["subject"]>]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+      "text": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>[0], ["text"]>>;
+    };
+    output: {
+      "message": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>>, ["message"]>>;
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "INVALID_LISTING" | "INVALID_MESSAGE" | "UNKNOWN_SESSION" };
+  };
+  "/messages/thread": {
+    input: {
+      "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["buyer"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["subject"]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "conversation": {
+        "messages": {
+          "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["buyer"]>>;
+          "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["seller"]>>;
+          "sender": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["sender"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" | "UNKNOWN_SESSION" };
   };
 };
 
@@ -206,6 +388,15 @@ export type ClaimedWireHttp = {
     };
     error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };
+  "/marketplace/accept-offer": {
+    input: {
+      "offer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["select"]>[0], ["offer"]>>;
+    };
+    output: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["reserve"]>[0], ["resource"]>>;
+    };
+    error: { error: HttpAppWideError | "CONFLICT" | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
   "/marketplace/activity": {
     input: Record<string, never>;
     output: {
@@ -215,9 +406,9 @@ export type ClaimedWireHttp = {
             "claimer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Claiming"]["_get"]>>>, ["claimer"]>>;
             "status": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Claiming"]["_get"]>>>, ["status"]>>;
           };
-          "details": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_all"]>>>, ["details"]>>;
-          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_all"]>>>, ["listing"]>>;
-          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_all"]>>>, ["seller"]>>;
+          "details": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_visible"]>>>, ["details"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_visible"]>>>, ["listing"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_visible"]>>>, ["seller"]>>;
           "transaction": {
             "payee": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_get"]>>>, ["payee"]>> | null;
             "payer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_get"]>>>, ["payer"]>> | null;
@@ -239,10 +430,10 @@ export type ClaimedWireHttp = {
   };
   "/marketplace/claim": {
     input: {
-      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["claim"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_mayBuy"]>[0], ["listing"]>]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["reserve"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_mayBuy"]>[0], ["listing"]>]>>;
     };
     output: {
-      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["claim"]>[0], ["resource"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["reserve"]>[0], ["resource"]>>;
     };
     error: { error: HttpAppWideError | "CONFLICT" | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };
@@ -254,6 +445,17 @@ export type ClaimedWireHttp = {
       "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["confirmReceived"]>[0], ["subject"]>>;
     };
     error: { error: HttpAppWideError | "CONFLICT" | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/marketplace/edit": {
+    input: {
+      "details": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["details"]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["_get"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_get"]>[0], ["subject"]>]>>;
+      "previous": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["previous"]>>;
+    };
+    output: {
+      "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>[0], ["listing"]>, AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["update"]>>, ["listing"]>]>>;
+    };
+    error: { error: HttpAppWideError | "CONFLICT" | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };
   "/marketplace/list": {
     input: Record<string, never>;
@@ -271,6 +473,47 @@ export type ClaimedWireHttp = {
     };
     error: { error: HttpAppWideError };
   };
+  "/marketplace/offer": {
+    input: {
+      "amount": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["quote"]>[0], ["amount"]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["checkAvailable"]>[0], ["resource"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["propose"]>[0], ["subject"]>]>>;
+    };
+    output: {
+      "offer": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["propose"]>>, ["offer"]>>;
+    };
+    error: { error: HttpAppWideError | "CONFLICT" | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/marketplace/offers": {
+    input: Record<string, never>;
+    output: {
+      "inbox": {
+        "offers": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["subject"]>>;
+          "offer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["offer"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["seller"]>>;
+          "status": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["status"]>>;
+          "terms": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_inbox"]>>>, ["terms"]>>;
+        }[];
+      };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/marketplace/payment": {
+    input: {
+      "listing": Jsonify<AllOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_private"]>[0], ["subject"]>]>>;
+    };
+    output: {
+      "transaction": {
+        "payment": {
+          "details": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["_get"]>>>, ["details"]>> | null;
+          "evidence": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_private"]>>>, ["evidence"]>> | null;
+          "terms": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["_private"]>>>, ["terms"]>> | null;
+        };
+      };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
   "/marketplace/publish": {
     input: {
       "details": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>[0], ["details"]>>;
@@ -280,6 +523,17 @@ export type ClaimedWireHttp = {
     };
     error: { error: HttpAppWideError | "CONFLICT" | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };
+  "/marketplace/report-evidence": {
+    input: {
+      "data": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["data"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["subject"]>>;
+      "mime": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["mime"]>>;
+    };
+    output: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["report"]>[0], ["subject"]>>;
+    };
+    error: { error: HttpAppWideError | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
   "/marketplace/report-paid": {
     input: {
       "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["reportPaid"]>[0], ["subject"]>>;
@@ -288,5 +542,100 @@ export type ClaimedWireHttp = {
       "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["reportPaid"]>[0], ["subject"]>>;
     };
     error: { error: HttpAppWideError | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/marketplace/resolve-offer": {
+    input: {
+      "decision": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["resolve"]>[0], ["decision"]>>;
+      "offer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["resolve"]>[0], ["offer"]>>;
+    };
+    output: {
+      "offer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["resolve"]>[0], ["offer"]>>;
+    };
+    error: { error: HttpAppWideError | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/messages/conversations": {
+    input: Record<string, never>;
+    output: {
+      "inbox": {
+        "conversations": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["seller"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_conversations"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/messages/history": {
+    input: {
+      "before": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["before"]>>;
+      "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["buyer"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["subject"]>>;
+    };
+    output: {
+      "conversation": {
+        "messages": {
+          "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["buyer"]>>;
+          "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>[0], ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["seller"]>>;
+          "sender": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["sender"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_history"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/messages/list": {
+    input: Record<string, never>;
+    output: {
+      "inbox": {
+        "messages": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["seller"]>>;
+          "sender": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["sender"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_inbox"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/messages/send": {
+    input: {
+      "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>[0], ["buyer"]>>;
+      "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["owner"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>[0], ["subject"]>]>>;
+      "text": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>[0], ["text"]>>;
+    };
+    output: {
+      "message": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["send"]>>, ["message"]>>;
+    };
+    error: { error: HttpAppWideError | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/messages/thread": {
+    input: {
+      "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["buyer"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["subject"]>>;
+    };
+    output: {
+      "conversation": {
+        "messages": {
+          "buyer": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["buyer"]>>;
+          "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>[0], ["subject"]>>;
+          "message": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["message"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["seller"]>>;
+          "sender": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["sender"]>>;
+          "sentAt": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["sentAt"]>>;
+          "text": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Messaging"]["_thread"]>>>, ["text"]>>;
+        }[];
+      };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };
 };

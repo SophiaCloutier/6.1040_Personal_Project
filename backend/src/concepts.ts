@@ -6,5 +6,7 @@ import { listing } from './concepts/Listing.registry.ts';
 import { claiming } from './concepts/Claiming.registry.ts';
 import { transactionconfirming } from './concepts/TransactionConfirming.registry.ts';
 import { imageuploading } from './concepts/ImageUploading.registry.ts';
-export const applicationConceptSet = conceptSet({ Authenticating: authenticating, Sessioning: sessioning, Listing: listing, Claiming: claiming, TransactionConfirming: transactionconfirming, ImageUploading: imageuploading });
+import { negotiating } from './concepts/Negotiating.registry.ts';
+import { messaging } from './concepts/Messaging.registry.ts';
+export const applicationConceptSet = conceptSet({ Messaging: messaging, Negotiating: negotiating, Authenticating: authenticating, Sessioning: sessioning, Listing: listing, Claiming: claiming, TransactionConfirming: transactionconfirming, ImageUploading: imageuploading });
 export const { concepts } = applicationConceptSet;
