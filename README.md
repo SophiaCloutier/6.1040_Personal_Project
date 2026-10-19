@@ -10,11 +10,6 @@ The beta supports accounts, editable listings, photo framing, fixed-price claims
 
 The marketplace has a responsive grid and public item pages. Guests can browse without an account; claiming requires sign-in. Sellers can upload photos and create custom tags, and buyers can combine keyword search with tag, price, and availability filters.
 
-## Automated tests
-
-Start MongoDB from the repository root with `docker compose up -d mongo`. Then run `cd backend`, `bun install`, and `bun test`. Tests use unique temporary databases on `mongodb://127.0.0.1:27017` and drop them after execution; do not point tests at application data. Most tests also support `MONGODB_URI`, but `concepts.test.ts` uses localhost explicitly. Session expiry is simulated by updating the expiry timestamp; other fixtures are created through actions or HTTP requests.
-
-Save output in PowerShell with `bun test 2>&1 | Tee-Object -FilePath ../validation/p3-tests.txt`. See [latest P3 execution output](validation/p3-tests.txt). Coverage includes accounts, sessions, listings, claims, offers, payment confirmation, image uploads, messaging, access restrictions, persistence, and competing reservations. Interface walkthroughs remain a separate manual check; automated HTTP journeys do not establish that every browser interaction works.
 
 ## Design documents
 
@@ -30,8 +25,5 @@ Save output in PowerShell with `bun test 2>&1 | Tee-Object -FilePath ../validati
 
 ## Demo
 
-<video controls width="100%" src="https://github.com/SophiaCloutier/6.1040_Personal_Project/raw/refs/heads/main/Alpha%20Demo.mp4">
-	<a href="Alpha%20Demo.mp4">Watch the alpha demo</a>
-</video>
+[Alpha demo](https://youtu.be/P8EqzCgvc2c)
 
-If the video player does not load, [download the alpha demo](Alpha%20Demo.mp4).
