@@ -1,10 +1,10 @@
-import { MongoClient } from 'mongodb';
+import { database } from '../database.ts';
+
 
 export class UnknownSession extends Error {}
 
 export class SessioningConcept {
-  private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly sessions = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ session: string; subject: string; expiresAt: Date }>('sessions');
+  private readonly sessions = database().collection<{ session: string; subject: string; expiresAt: Date }>('sessions');
 
   async start({ subject }: { subject: string }) {
     await this.sessions.createIndex({ session: 1 }, { unique: true });

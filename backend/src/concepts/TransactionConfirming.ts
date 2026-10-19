@@ -1,10 +1,10 @@
-import { MongoClient, MongoServerError } from 'mongodb';
+import { database } from '../database.ts';
+import { MongoServerError } from 'mongodb';
 import { encodePhoto } from '../image-codec.ts';
 export class InvalidTransaction extends Error {}
 export class CancellationUnavailable extends Error {}
 export class TransactionConfirmingConcept {
-  private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly rows = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ payer: string; payee: string; subject: string; status: string; terms?: string; evidence?: string }>('transactions');
+  private readonly rows = database().collection<{ payer: string; payee: string; subject: string; status: string; terms?: string; evidence?: string }>('transactions');
   async start({ payer, payee, subject }: { payer: string; payee: string; subject: string }) {
     await this.rows.createIndex({ subject: 1 }, { unique: true });
     try { await this.rows.insertOne({ payer, payee, subject, status: 'awaitingPayment' }); }

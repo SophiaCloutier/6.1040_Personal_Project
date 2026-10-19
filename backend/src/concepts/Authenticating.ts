@@ -1,4 +1,5 @@
-import { MongoClient, MongoServerError } from 'mongodb';
+import { database } from '../database.ts';
+import { MongoServerError } from 'mongodb';
 
 export class InvalidUsername extends Error {}
 export class WeakPassword extends Error {}
@@ -6,8 +7,7 @@ export class UsernameTaken extends Error {}
 export class InvalidCredentials extends Error {}
 
 export class AuthenticatingConcept {
-  private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly accounts = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ username: string; passwordVerifier: string }>('accounts');
+  private readonly accounts = database().collection<{ username: string; passwordVerifier: string }>('accounts');
 
   async register({ username, password }: { username: string; password: string }) {
     if (!/^[A-Za-z0-9_-]{3,32}$/.test(username)) throw new InvalidUsername('A username must contain 3 to 32 letters, numbers, underscores, or hyphens.');

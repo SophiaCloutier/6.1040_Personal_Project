@@ -1,8 +1,8 @@
-import { MongoClient } from 'mongodb';
+import { database } from '../database.ts';
+
 export class InvalidMessage extends Error {}
 export class MessagingConcept {
-  private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly rows = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ message: string; subject: string; buyer: string; seller: string; sender: string; text: string; sentAt: string }>('messages');
+  private readonly rows = database().collection<{ message: string; subject: string; buyer: string; seller: string; sender: string; text: string; sentAt: string }>('messages');
   async send({ actor, buyer, seller, subject, text }: { actor: string; buyer: string; seller: string; subject: string; text: string }) {
     if (!text.trim() || text.length > 2000 || !buyer || buyer === seller || (actor !== buyer && actor !== seller)) throw new InvalidMessage('Write a message of 1–2000 characters to the other participant.');
     if (actor === seller && !await this.rows.findOne({ buyer, seller, subject })) throw new InvalidMessage('Reply to an existing buyer conversation.');

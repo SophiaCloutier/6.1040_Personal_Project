@@ -1,10 +1,10 @@
-import { MongoClient } from 'mongodb';
+import { database } from '../database.ts';
+
 import { normalizeClothingSize } from '../../shared/clothing-sizes.ts';
 export class InvalidListing extends Error {}
 export class ListingLocked extends Error {}
 export class ListingConcept {
-  private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly rows = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ listing: string; seller: string; details: string; locked?: boolean }>('listings');
+  private readonly rows = database().collection<{ listing: string; seller: string; details: string; locked?: boolean }>('listings');
   #normalize(details: string): string {
     let value;
     try { value = JSON.parse(details); } catch { throw new InvalidListing('Listing details are invalid.'); }

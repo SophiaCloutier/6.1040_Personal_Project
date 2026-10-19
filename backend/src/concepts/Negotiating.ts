@@ -1,8 +1,8 @@
-import { MongoClient } from 'mongodb';
+import { database } from '../database.ts';
+
 export class InvalidOffer extends Error {}
 export class NegotiatingConcept {
-  private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly rows = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ offer: string; buyer: string; seller: string; subject: string; terms: string; status: string }>('offers');
+  private readonly rows = database().collection<{ offer: string; buyer: string; seller: string; subject: string; terms: string; status: string }>('offers');
   async propose({ buyer, seller, subject, terms }: { buyer: string; seller: string; subject: string; terms: string }) {
     if (buyer === seller) throw new InvalidOffer('You cannot offer on your own listing.');
     const offer = crypto.randomUUID();

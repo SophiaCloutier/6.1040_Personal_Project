@@ -1,8 +1,8 @@
-import { MongoClient, MongoServerError } from 'mongodb';
+import { database } from '../database.ts';
+import { MongoServerError } from 'mongodb';
 export class ClaimUnavailable extends Error {}
 export class ClaimingConcept {
-  private readonly client = new MongoClient(process.env.MONGODB_URI ?? 'mongodb://127.0.0.1:27017');
-  private readonly rows = this.client.db(process.env.MONGODB_DATABASE ?? 'claimed').collection<{ resource: string; status: string; claimer: string; terms?: string }>('claims');
+  private readonly rows = database().collection<{ resource: string; status: string; claimer: string; terms?: string }>('claims');
   async makeAvailable({ resource }: { resource: string }) {
     await this.rows.createIndex({ resource: 1 }, { unique: true });
     try { await this.rows.insertOne({ resource, status: 'available', claimer: '' }); }

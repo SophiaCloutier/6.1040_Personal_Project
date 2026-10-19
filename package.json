@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "packageManager": "bun@1.4.2",
+  "scripts": {
+    "build": "bun run --cwd backend build",
+    "start": "bun run --cwd backend start",
+    "preview": "bun run build && bun run scripts/preview.ts"
+  }
+}
