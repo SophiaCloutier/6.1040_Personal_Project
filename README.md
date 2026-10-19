@@ -20,5 +20,5 @@ See [local setup](SETUP.md) for Docker MongoDB and the Bun/Vue app. The interfac
 
 ## Demo
 
-[Alpha demo](https://youtu.be/up8ZBo1ebZY)
+[Alpha demo](https://youtu.be/WtIpPg8ImIA)
 
