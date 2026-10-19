@@ -21,7 +21,7 @@ Only backend needs dependency installation (backend/bun.lock).
 2. Add S3 storage and save the default `S3_` variables. Images are encoded on the
    server and stored in S3. `/uploads/...` streams them through the app; no public
    bucket or browser upload permission is required.
-3. Set `NODE_ENV=production` and `PUBLIC_ORIGIN=https://<app-name>.mit-sdg.dev`.
+3. Set `PUBLIC_ORIGIN=https://<app-name>.mit-sdg.dev`. The platform manages the reserved `NODE_ENV` variable.
 4. Push the deployment changes, select that exact commit, and deploy.
 5. Check `/health`, then register/sign in, publish a listing with a photo, reload
    the item page, and verify it still loads after a redeployment.
