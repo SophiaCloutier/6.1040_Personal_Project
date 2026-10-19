@@ -69,15 +69,15 @@ In recording the video I though of some things I would like to remeber to work o
 
 I will also need to implement the OBO feature and possibly a chat feature.
 
-## Entries 12: Editing listings and bringing back offers - October 17, 2026
+## Entry 12: Editing listings and bringing back offers - October 17, 2026
 I wanted sellers to be able to fix or update listings without starting over, so I'm reusing the listing form for edits. Only the seller can make changes, and an edit should fail if someone else has changed the listing since it was opened. I also fixed the sign-in dialog closing when someone drags to select text. It should only close when a click actually starts on the background.
 I'm finally adding OBO, but sellers can choose whether to allow offers. Making an offer won't reserve the item, so someone can still buy it at full price. If a seller accepts an offer, it goes through the same claiming system as a normal purchase to prevent two people from getting the same item. I'm keeping Negotiating separate from Claiming, and saving the agreed price and payment terms when the item is reserved. That way, editing a listing later can't change what a buyer already agreed to pay.
 
-## Entries 13: Payment proof and a better photo experience - October 17, 2026
+## Entry 13: Payment proof and a better photo experience - October 17, 2026
 I was considering requiring screenshots as proof of payment, but I don't think that makes sense for cash purchases, and a screenshot doesn't actually prove the seller received the money. Instead, sellers can choose whether to require one, and buyers can attach one voluntarily. Only the buyer and seller should see it. I also realized payment instructions shouldn't be visible to unrelated signed-in users, so those need to stay private too. The seller still has to confirm receipt before a sale is complete.
 The photo framing sliders were awkward, so I switched to dragging and zooming directly on the image. The marketplace cover keeps its crop, but the full item viewer should also let people pan, zoom, and fit the whole picture. I removed swipe-to-change-photo there because it conflicts with dragging. I also made the Edit listing and Send offer actions easier to find. Once payment has been reported, listing edits will be locked so the seller can't change the details midway through completing a sale.
 
-## Entries 14: Making messaging feel like actual messaging - October 17, 2026
+## Entry 14: Making messaging feel like actual messaging - October 17, 2026
 I wanted buyers to be able to ask sellers questions, but the first version of messaging felt more like a collection of forms than a chat. I'm keeping Messaging as its own concept, with private conversations tied to a specific listing and buyer. The inbox now has a searchable conversation list and a separate chat view, with my messages on the right and the other person's on the left. Drafts should stay with the correct conversation when switching between people, and older messages should be loadable instead of disappearing after the first 200.
 I also changed the Buying and Selling pages to put the most useful items first. Sales waiting for seller confirmation come first in Selling, active items come next, and completed sales go last. Buying similarly puts active purchases before completed ones. I think this makes more sense than sorting everything by date when some items still need action.
 
