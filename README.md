@@ -8,7 +8,7 @@ Claimed! is a marketplace designed specifically for MIT senior sales, making it 
 - [Updated buying and selling journeys](Design/5.%20User%20Journey.md)
 - [Visual design study and annotations](Design/6.%20Visual%20Study.md)
 - [Automated tests](backend/tests) and [saved test output](validation/p3-tests.txt)
-- [Beta Video]()
+- [Beta Video](https://youtu.be/okTUj_0g6fc)
 
 ## Run the app
 
@@ -38,6 +38,6 @@ The current Beta specifications are in [backend/design](backend/design): [concep
 
 [Alpha demo](https://youtu.be/WtIpPg8ImIA)
 
-[Beta demo]()
+[Beta demo](https://youtu.be/okTUj_0g6fc)
 
 
