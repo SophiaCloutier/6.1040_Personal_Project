@@ -8,21 +8,18 @@ See [local setup](SETUP.md) for Docker MongoDB and the Bun/Vue app. The interfac
 
 ## Design documents
 
-- [Visual direction and typography slide outline](Design/6.%20Visual%20Study.md)
-
 - [Problem Framing](Design/1.%20Problem%20Framing.md)
 - [Stakeholders](Design/1.1%20Stakeholders.md)
 - [Application Pitch](Design/2.%20Application%20Pitch.md)
 - [Concepts & Reactions](Design/3.%20Concepts%20%26%20Reactions.md)
 - [UI Sketches](Design/4.%20UI%20Sketches.md)
 - [User Journey](Design/5.%20User%20Journey.md)
+- [Visual Design Study](Design/6.%20Visual%20Study.md)
 - [Notebook](Notebook.md)
+
 
 ## Demo
 
 [Alpha demo](https://youtu.be/WtIpPg8ImIA)
 
 
-## Deployment
-
-See [deployment settings and checklist](DEPLOYMENT.md) for 6.1040 Apps.
