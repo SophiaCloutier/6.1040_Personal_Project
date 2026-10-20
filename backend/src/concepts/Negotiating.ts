@@ -30,4 +30,10 @@ export class NegotiatingConcept {
   async _inbox({ actor }: { actor: string }) {
     return (await this.rows.find({ $or: [{ seller: actor }, { buyer: actor }] }).sort({ _id: 1 }).toArray()).map(({ _id, ...row }) => row);
   }
+  async _public({ subject }: { subject: string }) {
+    return (await this.rows.find({ subject }).sort({ _id: 1 }).toArray()).map(({ _id, ...row }) => ({
+      ...row, terms: JSON.stringify({ price: JSON.parse(row.terms).price }),
+    }));
+  }
+
 }

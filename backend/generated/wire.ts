@@ -159,6 +159,24 @@ export type ClaimedWire = {
     };
     error: { error: AppWideError };
   };
+  "/marketplace/listing-offers": {
+    input: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>[0], ["subject"]>>;
+    };
+    output: {
+      "inbox": {
+        "offers": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>[0], ["subject"]>>;
+          "offer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["offer"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["seller"]>>;
+          "status": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["status"]>>;
+          "terms": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["terms"]>>;
+        }[];
+      };
+    };
+    error: { error: AppWideError | "INVALID_INPUT" };
+  };
   "/marketplace/offer": {
     input: {
       "amount": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["quote"]>[0], ["amount"]>>;
@@ -472,6 +490,24 @@ export type ClaimedWireHttp = {
       };
     };
     error: { error: HttpAppWideError };
+  };
+  "/marketplace/listing-offers": {
+    input: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>[0], ["subject"]>>;
+    };
+    output: {
+      "inbox": {
+        "offers": {
+          "buyer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["buyer"]>>;
+          "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>[0], ["subject"]>>;
+          "offer": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["offer"]>>;
+          "seller": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["seller"]>>;
+          "status": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["status"]>>;
+          "terms": Jsonify<AtPath<QueryRow<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Negotiating"]["_public"]>>>, ["terms"]>>;
+        }[];
+      };
+    };
+    error: { error: HttpAppWideError | "INVALID_REQUEST" };
   };
   "/marketplace/offer": {
     input: {

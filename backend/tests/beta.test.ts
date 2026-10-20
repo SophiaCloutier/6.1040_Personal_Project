@@ -47,6 +47,14 @@ test('beta journey: edits, competing offers, frozen terms, private evidence and 
     const offer1 = await call('/marketplace/offer', { listing, amount: '70' }, buyer.cookie);
     const offer2 = await call('/marketplace/offer', { listing, amount: '80' }, rival.cookie);
     expect([offer1.status, offer2.status]).toEqual([200, 200]);
+    for (const cookie of ['', outsider.cookie, buyer.cookie, seller.cookie]) {
+      const visible = await call('/marketplace/listing-offers', { listing }, cookie);
+      expect(visible.status).toBe(200);
+      expect(visible.body.inbox.offers.map((o: any) => JSON.parse(o.terms))).toEqual([{ price: 70 }, { price: 80 }]);
+      expect(visible.body.inbox.offers.map((o: any) => o.offer)).toEqual([offer1.body.offer, offer2.body.offer]);
+    }
+    expect((await call('/marketplace/listing-offers', { listing: 'another-listing' })).body.inbox.offers).toEqual([]);
+    expect((await call('/marketplace/resolve-offer', { offer: offer1.body.offer, decision: 'withdrawn' }, outsider.cookie)).status).toBe(403);
     expect((await call('/marketplace/offers')).status).toBe(401);
     expect((await call('/marketplace/offers', {}, outsider.cookie)).body.inbox.offers).toEqual([]);
     expect((await call('/marketplace/accept-offer', { offer: offer1.body.offer }, buyer.cookie)).status).toBe(403);

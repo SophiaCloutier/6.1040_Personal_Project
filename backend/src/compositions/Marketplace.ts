@@ -87,6 +87,11 @@ const Payment = endpoint('/marketplace/payment', ({ session, user, listing }) =>
 const Offers = former('my offers', ({ user }, { offer, buyer, seller, listing, terms, status }) => form({
   offers: each(Negotiating._inbox({ actor: user }).is({ offer, buyer, seller, subject: listing, terms, status })).form({ offer, buyer, seller, listing, terms, status }),
 }));
+const ListingOffers = former('public listing offers', ({ listing }, { offer, buyer, seller, terms, status }) => form({
+  offers: each(Negotiating._public({ subject: listing }).is({ offer, buyer, seller, terms, status })).form({ offer, buyer, seller, listing, terms, status }),
+}));
+const PublicOffers = endpoint('/marketplace/listing-offers', ({ listing }) => receive({ listing })
+  .then(respond({ inbox: ListingOffers({ listing }) })), { input: { required: ['listing'] }, validators: { input: validator(v => Object.keys(v).length === 1 && typeof v.listing === 'string' && v.listing.length > 0 && v.listing.length <= 100, 'A listing identifier is required.') } });
 const OfferList = endpoint('/marketplace/offers', ({ session, user }) => receive({ session })
   .then(Sessioning.current({ session }).responds({ subject: user }))
   .then(respond({ inbox: Offers({ user }) })), { input: { required: ['session'] }, validators: { input: sessionOnlyInput } });
@@ -114,5 +119,5 @@ const Cancel = endpoint('/marketplace/cancel', ({ session, user, listing }) => r
   .then(Sessioning.current({ session }).responds({ subject: user }))
   .then(TransactionConfirming.cancel({ actor: user, subject: listing }))
   .then(respond({ listing })), { input: { required: ['session', 'listing'] }, validators: { input: identityInput } });
-export const composition = { Workflow: { MakeAvailable, FreezeReported, FreezeReportedLegacy, EditingBlocked, StartTransaction, CloseOffers, CompleteClaim, ReleaseCancelled, BuyerAllowed, BuyerDenied, Marketplace, PublicMarketplace, Browse, Activity, Publish, Edit, Claim, ReportPaid, ReportEvidence, PaymentSnapshot, PrivateTransaction, Payment, Offers, OfferList, Propose, AcceptOffer, ResolveOffer, Confirm, Cancel } };
+export const composition = { Workflow: { MakeAvailable, FreezeReported, FreezeReportedLegacy, EditingBlocked, StartTransaction, CloseOffers, CompleteClaim, ReleaseCancelled, BuyerAllowed, BuyerDenied, Marketplace, PublicMarketplace, Browse, Activity, Publish, Edit, Claim, ReportPaid, ReportEvidence, PaymentSnapshot, PrivateTransaction, Payment, Offers, ListingOffers, PublicOffers, OfferList, Propose, AcceptOffer, ResolveOffer, Confirm, Cancel } };
 

@@ -55,5 +55,7 @@ select (actor: Actor, offer: Offer) : returns (buyer: Actor, subject: Subject, t
 ```queries
 _inbox (actor: Actor) : many (offer: Offer, buyer: Actor, seller: Actor, subject: Subject, terms: String, status: String)
   answers only proposals where actor is buyer or seller
+_public (subject: Subject) : many (offer: Offer, buyer: Actor, seller: Actor, subject: Subject, terms: String, status: String)
+  answers all proposals for subject with terms containing only the offered price
 ```
 

@@ -125,6 +125,9 @@ async function run(task: () => Promise<void>) {
 async function signIn() {
   await run(async () => {
     const result = register.value ? await api.auth.register({ ...credentials }) : await api.auth['sign-in']({ ...credentials });
+    if (register.value && 'error' in result && result.error === 'CONFLICT') {
+      throw new Error('That username is already taken. Choose another username or sign in to your existing account.');
+    }
     check(result);
     if ('account' in result) user.value = result.account;
     credentials.password = ''; auth.value = false; await load(); note(register.value ? 'Welcome to Claimed! Your next find is waiting.' : `Welcome back, ${user.value}.`);
@@ -163,9 +166,15 @@ function navigate(next: 'market' | 'activity') {
   history.pushState({}, '', next === 'activity' ? '/activity' : '/');
   window.scrollTo({ top: 0 });
 }
+function backToResults() {
+  if (history.state?.fromListingList) history.back();
+  else navigate('market');
+}
 function openItem(listing: string) {
+  const fromListingList = page.value !== 'item';
+  if (fromListingList) history.replaceState({ ...history.state, listingScroll: window.scrollY }, '');
   selected.value = listing; cancelling.value = false; page.value = 'item'; message.value = '';
-  history.pushState({}, '', '/items/' + listing);
+  history.pushState({ fromListingList }, '', '/items/' + listing);
   window.scrollTo({ top: 0 });
 }
 function followItem(event: MouseEvent, listing: string) {
@@ -178,6 +187,7 @@ function syncRoute() {
   selected.value = match?.[1] ?? null;
   page.value = match ? 'item' : location.pathname === '/activity' ? 'activity' : 'market';
   cancelling.value = false;
+  if (!match) void nextTick(() => window.scrollTo({ top: history.state?.listingScroll ?? 0 }));
 }
 watch(active, item => { document.title = item ? details(item).title + ' — Claimed!' : 'Claimed! — MIT marketplace'; });
 let timer: ReturnType<typeof setInterval>;
@@ -265,7 +275,7 @@ onUnmounted(() => { clearPhoto(); clearInterval(timer); window.removeEventListen
       </template>
     </section>
     <section v-if="page === 'item'" class="item-page">
-      <div class="breadcrumbs"><button @click="navigate('market')">Marketplace</button><span>/</span><span>{{ active ? 'Item details' : 'Item' }}</span></div>
+      <div class="breadcrumbs"><button class="quiet" aria-label="Back to previous page" @click="backToResults">&larr; Back</button><button @click="navigate('market')">Marketplace</button><span>/</span><span>{{ active ? 'Item details' : 'Item' }}</span></div>
       <div v-if="loading" class="empty" role="status"><h2>Loading item…</h2></div>
       <div v-else-if="!active" class="empty"><h2>This listing could not be found.</h2><p>Browse the marketplace to find another item.</p><button class="dark" @click="navigate('market')">Back to marketplace</button></div>
       <div v-else class="item-layout">
@@ -292,7 +302,7 @@ onUnmounted(() => { clearPhoto(); clearInterval(timer); window.removeEventListen
           <p v-if="active.claim?.status === 'completed'" class="sold-note">Sale complete. Ready for its next home. ✓</p>
           <p v-else-if="active.seller === user && active.claim?.status === 'available'" class="form-help">This is your listing. It is live and available to buyers.</p>
           <p v-else-if="active.claim?.status === 'claimed' && active.claim?.claimer !== user && active.seller !== user" class="form-help">Another buyer has reserved this item. Check back in case it becomes available.</p>
-          <OfferPanel :key="'offers-' + active.listing + user" :user="user" :listing="active.listing" :seller="active.seller" :available="active.claim?.status === 'available'" :enabled="details(active).obo" @changed="load" />
+          <OfferPanel v-if="details(active).obo" :key="'offers-' + active.listing + user" :user="user" :listing="active.listing" :seller="active.seller" :available="active.claim?.status === 'available'" :enabled="details(active).obo" @changed="load" />
           <MessagesPanel :key="'messages-' + active.listing + user" :user="user" :listing="active.listing" :seller="active.seller" :titles="itemTitles" />
           <p class="transaction-note">Claimed! reserves items and records payment confirmations. Payments happen directly between buyer and seller.</p>
         </div>

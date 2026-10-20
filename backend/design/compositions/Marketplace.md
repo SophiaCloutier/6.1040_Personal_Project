@@ -26,6 +26,7 @@ Marketplace.Workflow.Cancel at /marketplace/cancel
 Marketplace.Workflow.ReportEvidence at /marketplace/report-evidence
 Marketplace.Workflow.Payment at /marketplace/payment
 Marketplace.Workflow.OfferList at /marketplace/offers
+Marketplace.Workflow.PublicOffers at /marketplace/listing-offers
 Marketplace.Workflow.Propose at /marketplace/offer
 Marketplace.Workflow.AcceptOffer at /marketplace/accept-offer
 Marketplace.Workflow.ResolveOffer at /marketplace/resolve-offer
@@ -45,3 +46,5 @@ Marketplace.Workflow.ResolveOffer at /marketplace/resolve-offer
 [Payment snapshot](view:Marketplace.Workflow.PaymentSnapshot) joins a participant-authorized transaction with its listing. Current details are available only inside that authorized join, to recover instructions for legacy reservations without saved terms. New reservations always use frozen terms.
 
 [Editing blocked](view:Marketplace.Workflow.EditingBlocked) prevents edits once payment is reported or a claim is completed, including records created before this restriction. [Freeze report](reaction:Marketplace.Workflow.FreezeReported) and [freeze legacy report](reaction:Marketplace.Workflow.FreezeReportedLegacy) close Listing updates durably after successful payment reporting. Listing uses an atomic unlocked condition when updating. Failed reports do not freeze listings. Reserved but unpaid listings remain editable, with transaction terms frozen as before.
+
+[Listing offer history](former:Marketplace.Workflow.ListingOffers) and [public offers](reaction:Marketplace.Workflow.PublicOffers) show all offers for a listing to every visitor, including signed-out visitors. Public terms contain only price; payment instructions remain private. Offer actions retain buyer and seller authorization.
