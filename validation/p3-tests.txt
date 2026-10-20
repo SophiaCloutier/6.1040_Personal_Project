@@ -1,46 +1,46 @@
 bun test v1.4.2 (744846f84)
 
 tests\accounts.test.ts:
-(pass) registration persists hashed credentials, rejects duplicates, and authenticates after reconstruction [1529.62ms]
-(pass) sessions persist, expire, and become unusable after sign-out [337.38ms]
+(pass) registration persists hashed credentials, rejects duplicates, and authenticates after reconstruction [1672.67ms]
+(pass) sessions persist, expire, and become unusable after sign-out [561.27ms]
 
 tests\activity.test.ts:
-(pass) selling puts confirmations first and sold last, preserving newest order within each group [0.95ms]
-(pass) edits close on reported payment or either completed state, but unpaid reservations remain editable [0.38ms]
+(pass) selling puts confirmations first and sold last, preserving newest order within each group [0.62ms]
+(pass) edits close on reported payment or either completed state, but unpaid reservations remain editable [0.18ms]
 
 tests\beta.test.ts:
-(pass) beta journey: edits, competing offers, frozen terms, private evidence and conversations [4194.35ms]
-(pass) offers may be declined or withdrawn; full-price reservations supersede proposals [1371.22ms]
-(pass) legacy reservations retain participant-only payment instructions [1862.84ms]
+(pass) beta journey: edits, competing offers, frozen terms, private evidence and conversations [4736.63ms]
+(pass) offers may be declined or withdrawn; full-price reservations supersede proposals [1938.06ms]
+(pass) legacy reservations retain participant-only payment instructions [1516.36ms]
 
 tests\concepts.test.ts:
-(pass) Listing validates prices and fields and preserves seller identity [117.49ms]
-(pass) Claiming enforces availability and claimer identity on completion [115.66ms]
-(pass) TransactionConfirming enforces payment order and both parties [162.46ms]
-(pass) payment reporting and cancellation cannot both win; cancellation permits a fresh transaction [82.90ms]
+(pass) Listing validates prices and fields and preserves seller identity [292.13ms]
+(pass) Claiming enforces availability and claimer identity on completion [218.58ms]
+(pass) TransactionConfirming enforces payment order and both parties [309.10ms]
+(pass) payment reporting and cancellation cannot both win; cancellation permits a fresh transaction [297.94ms]
 
 tests\images.test.ts:
-(pass) photo uploads validate content, resize, persist, and require authentication [3063.91ms]
+(pass) photo uploads validate content, resize, persist, and require authentication [2813.64ms]
 
 tests\journey.test.ts:
-(pass) empty-database journey, role enforcement, concurrent claims, and persistence [3959.03ms]
+(pass) empty-database journey, role enforcement, concurrent claims, and persistence [2660.55ms]
 
 tests\messaging.test.ts:
-(pass) busy threads do not hide older conversations and private thread history stays scoped [1245.36ms]
-(pass) freezing a listing refuses subsequent concept updates without changing its details [84.16ms]
+(pass) busy threads do not hide older conversations and private thread history stays scoped [917.34ms]
+(pass) freezing a listing refuses subsequent concept updates without changing its details [84.02ms]
 
 tests\negotiating.test.ts:
-(pass) Negotiating selects terms, closes competing offers, and preserves state on rejected actions [136.14ms]
+(pass) Negotiating selects terms, closes competing offers, and preserves state on rejected actions [130.56ms]
 
 tests\photo-framing.test.ts:
-(pass) drag follows the pointer and stops at image edges without exposing empty space [0.33ms]
-(pass) zoom supports old saved positions and stays within the supported crop range [0.15ms]
-(pass) item viewing can zoom out to fit the full image without changing editor zoom limits [0.38ms]
+(pass) drag follows the pointer and stops at image edges without exposing empty space [0.36ms]
+(pass) zoom supports old saved positions and stays within the supported crop range [0.17ms]
+(pass) item viewing can zoom out to fit the full image without changing editor zoom limits [0.06ms]
 
 tests\size-filter.test.ts:
-(pass) size filters preserve unsized items and restrict only items with a size [0.62ms]
+(pass) size filters preserve unsized items and restrict only items with a size [0.51ms]
 
  20 pass
  0 fail
  226 expect() calls
-Ran 20 tests across 10 files. [19.54s]
+Ran 20 tests across 10 files. [20.41s]

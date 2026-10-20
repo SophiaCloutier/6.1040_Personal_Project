@@ -65,7 +65,7 @@ Completed sales shouldn't keep appearing in the marketplace grid as if the items
 
 ## Entry 11: Notes for the Beta - October 15, 2026
 
-In recording the video I though of some things I would like to remeber to work on in the Beta. One thing is allowing users to center their images after uploading. Another is that for some reason highlighting the username text in the sign in page closes the sign in page. Finally, I am thinking of maybe requiering some form of uploading proof of payment (like a screenshot) to allow the user to click that they paid. I am not sure how I would implement that yet though. 
+In recording the video I thought of some things I would like to remember to work on in the Beta. One thing is allowing users to center their images after uploading. Another is that for some reason highlighting the username text in the sign-in page closes the sign-in page. Finally, I am thinking of maybe requiring some form of proof of payment (like a screenshot) before the user can click that they paid. I am not sure how I would implement that yet, though.
 
 I will also need to implement the OBO feature and possibly a chat feature.
 
@@ -81,4 +81,20 @@ The photo framing sliders were awkward, so I switched to dragging and zooming di
 I wanted buyers to be able to ask sellers questions, but the first version of messaging felt more like a collection of forms than a chat. I'm keeping Messaging as its own concept, with private conversations tied to a specific listing and buyer. The inbox now has a searchable conversation list and a separate chat view, with my messages on the right and the other person's on the left. Drafts should stay with the correct conversation when switching between people, and older messages should be loadable instead of disappearing after the first 200.
 I also changed the Buying and Selling pages to put the most useful items first. Sales waiting for seller confirmation come first in Selling, active items come next, and completed sales go last. Buying similarly puts active purchases before completed ones. I think this makes more sense than sorting everything by date when some items still need action.
 
+## Entry 15: Finding a visual style that fits thrifting - October 19, 2026
 
+I've changed my mind about the visual direction again. The cleaner marketplace layout helped make room for the listings, but I want the site to have more personality. I'm going with a retro '70s feel because I think it fits the thrifting side of the app. The posters, prints, and wavy patterns in my visual study gave me a direction for the warm colors and rounded shapes.
+
+I'm using a cream background with dark brown text, rust for primary buttons and prices, and peach, pink, and yellow accents. I feel like this will make the site more welcoming while still giving important actions enough contrast to stand out. The background ribbons will bring in the playful part, with cream surfaces behind the intro text to keep it readable. I'll keep status labels and payment steps explicit so color won't be the only way to understand what's happening.
+
+For typography, I want Cooper Black in the logo and major headings to carry that chunky retro feeling. Trebuchet MS will keep body text and controls straightforward, with Georgia for listing titles and the italic part of the main headline. I'm keeping the photo grid and dedicated item pages because those still make sense for browsing. Arched photos and rounded buttons will tie them into the new style without taking attention away from the items. I'll also keep visible keyboard focus outlines and reduced-motion support, and check that smaller text stays comfortable to read on a phone.
+
+
+
+## Entry 16: Beta validation and retaining transaction history - October 19, 2026
+
+I deployed Claimed! at https://claimed.mit-sdg.dev/ and manually tested it while using the site. The functionality is working in my testing, and I have not identified an unresolved functional problem from that use. The updated buying and selling journeys describe the Beta's workflow.
+
+The automated tests also passed: 20 tests, 0 failures, and 226 assertions across 10 files. They check the buying flow and persistence, competing claims, cancellation and payment ordering, offers, listing edits, private payment evidence, and messaging access, along with photo handling and filters. The execution output is saved in `validation/p3-tests.txt`; `validation/P3-validation.md` separates these automated checks from manual use and the additional read-only live checks. The implementation check, frontend type check, and production build passed as well. The implementation check still reports advisories, and the build reports dependency externalization warnings.
+
+I decided to keep buying and selling history rather than add the listing removal action from my original proposal. People should be able to look back at what they bought or sold. Completed sales leave the marketplace but remain in both participants' activity histories. I marked the original concept proposal as historical and linked the current Beta specifications so the submission makes that decision clear.
