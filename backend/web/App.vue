@@ -21,7 +21,7 @@ const user = ref(''), items = ref<Item[]>([]), search = ref(''), page = ref('mar
 const auth = ref(false), register = ref(false), publish = ref(false), selected = ref<string | null>(null), busy = ref(false), message = ref(''), failed = ref(false);
 const credentials = reactive({ username: '', password: '' });
 const loading = ref(false), disconnected = ref(false), brokenImages = reactive(new Set<string>());
-const cancelling = ref(false);
+const cancelling = ref(false), removing = ref<string | null>(null);
 type ChosenPhoto = { id: string; file?: File; preview: string; uploaded: string; x: number; y: number; zoom: number };
 const editing = ref<string | null>(null), previousDetails = ref('');
 function editListing(item: Item) {
@@ -161,8 +161,23 @@ async function action(kind: 'claim' | 'report-paid' | 'confirm' | 'cancel') {
   const listing = active.value.listing;
   await run(async () => { check(await api.marketplace[kind]({ listing })); cancelling.value = false; await load(); note(kind === 'cancel' ? 'Reservation cancelled. The item is available again.' : kind === 'claim' ? 'It’s reserved for you. Pay the seller, then report your payment.' : kind === 'report-paid' ? 'Payment reported. The seller will confirm receipt.' : 'Payment confirmed. The item is now sold.'); });
 }
+async function removeListing(item: Item) {
+  if (item.seller !== user.value || item.claim?.status !== 'available') return;
+  const listing = item.listing;
+  const fromItemPage = page.value === 'item';
+  await run(async () => {
+    const result = await api.marketplace.remove({ listing });
+    if ('error' in result && result.error === 'CONFLICT') {
+      await load(); removing.value = null;
+      throw new Error('This item is no longer available. Only available items can be removed.');
+    }
+    check(result);
+    removing.value = null;
+    await load(); if (fromItemPage) backToResults(); note('Your listing has been removed from the marketplace.');
+  });
+}
 function navigate(next: 'market' | 'activity') {
-  selected.value = null; cancelling.value = false; page.value = next;
+  selected.value = null; cancelling.value = false; removing.value = null; page.value = next;
   history.pushState({}, '', next === 'activity' ? '/activity' : '/');
   window.scrollTo({ top: 0 });
 }
@@ -173,7 +188,7 @@ function backToResults() {
 function openItem(listing: string) {
   const fromListingList = page.value !== 'item';
   if (fromListingList) history.replaceState({ ...history.state, listingScroll: window.scrollY }, '');
-  selected.value = listing; cancelling.value = false; page.value = 'item'; message.value = '';
+  selected.value = listing; cancelling.value = false; removing.value = null; page.value = 'item'; message.value = '';
   history.pushState({ fromListingList }, '', '/items/' + listing);
   window.scrollTo({ top: 0 });
 }
@@ -186,7 +201,7 @@ function syncRoute() {
   const match = location.pathname.match(/^\/items\/([a-f0-9-]{36})$/);
   selected.value = match?.[1] ?? null;
   page.value = match ? 'item' : location.pathname === '/activity' ? 'activity' : 'market';
-  cancelling.value = false;
+  cancelling.value = false; removing.value = null;
   if (!match) void nextTick(() => window.scrollTo({ top: history.state?.listingScroll ?? 0 }));
 }
 watch(active, item => { document.title = item ? details(item).title + ' — Claimed!' : 'Claimed! — MIT marketplace'; });
@@ -271,7 +286,7 @@ onUnmounted(() => { clearPhoto(); clearInterval(timer); window.removeEventListen
       <div v-if="loading" class="empty" role="status"><span class="empty-symbol">↗</span><h3>Finding your good things…</h3></div>
       <div v-else-if="page === 'activity' && !user" class="empty"><h3>Sign in to see your activity.</h3><p>You can browse the marketplace without an account.</p><button class="dark" @click="auth = true; register = false">Sign in</button></div>
       <div v-else-if="!filtered.length" class="empty"><span class="empty-symbol">✳</span><h3>{{ page === 'activity' ? 'A fresh start.' : search || filterCount ? 'No finds just yet.' : 'Be the first to pass something on.' }}</h3><p>{{ page === 'activity' ? 'Your purchases and listings will appear here.' : search || filterCount ? 'Try another keyword or adjust your filters.' : 'That chair, lamp, or stack of books deserves a next chapter.' }}</p><button v-if="page === 'market' && !search" class="dark" @click="sell">Create a listing ↗</button></div>
-      <div v-else class="market-grid"><article v-for="item in filtered" :key="item.listing" class="market-row"><a class="market-card-link" :href="'/items/' + item.listing" @click="followItem($event, item.listing)"><div class="row-photo"><PhotoFrame v-if="imagesOf(item)[0] && !brokenImages.has(imagesOf(item)[0])" :src="imagesOf(item)[0]" :model-value="details(item).imagePositions?.[imagesOf(item)[0]]" :alt="details(item).title" @error="brokenImages.add(imagesOf(item)[0])" /><span v-else>No photo</span></div><div class="row-content"><div class="item-tags"><span v-for="tag in tagsOf(item).slice(0, 3)" :key="tag">{{ tag }}</span></div><h3>{{ details(item).title }}</h3><span v-if="details(item).clothingSize" class="clothing-size-label">Size {{ details(item).clothingSize }}</span><p class="row-description">{{ details(item).description || 'View this item for more details.' }}</p><span class="row-meta">⌖ {{ details(item).pickup }} <span>· Listed by {{ item.seller }}</span></span></div><div class="row-end"><strong>{{ money(details(item).price) }}</strong><span class="item-status" :class="{ sold: status(item) === 'Sold' }">{{ status(item) }}</span><span class="view-item">{{ item.seller === user ? 'Manage item' : item.claim?.status === 'available' ? 'View & reserve' : 'View item' }} <span>→</span></span></div></a><button v-if="item.seller === user && canEditListing(item)" type="button" class="quiet listing-edit" :disabled="busy" @click="editListing(item)">Edit listing</button></article></div>
+      <div v-else class="market-grid"><article v-for="item in filtered" :key="item.listing" class="market-row"><a class="market-card-link" :href="'/items/' + item.listing" @click="followItem($event, item.listing)"><div class="row-photo"><PhotoFrame v-if="imagesOf(item)[0] && !brokenImages.has(imagesOf(item)[0])" :src="imagesOf(item)[0]" :model-value="details(item).imagePositions?.[imagesOf(item)[0]]" :alt="details(item).title" @error="brokenImages.add(imagesOf(item)[0])" /><span v-else>No photo</span></div><div class="row-content"><div class="item-tags"><span v-for="tag in tagsOf(item).slice(0, 3)" :key="tag">{{ tag }}</span></div><h3>{{ details(item).title }}</h3><span v-if="details(item).clothingSize" class="clothing-size-label">Size {{ details(item).clothingSize }}</span><p class="row-description">{{ details(item).description || 'View this item for more details.' }}</p><span class="row-meta">⌖ {{ details(item).pickup }} <span>· Listed by {{ item.seller }}</span></span></div><div class="row-end"><strong>{{ money(details(item).price) }}</strong><span class="item-status" :class="{ sold: status(item) === 'Sold' }">{{ status(item) }}</span><span class="view-item">{{ item.seller === user ? 'Manage item' : item.claim?.status === 'available' ? 'View & reserve' : 'View item' }} <span>→</span></span></div></a><div v-if="item.seller === user" class="listing-actions"><button v-if="canEditListing(item)" type="button" class="quiet listing-edit" :disabled="busy" @click="editListing(item)">Edit listing</button><button v-if="item.claim?.status === 'available' && removing !== item.listing" type="button" class="quiet listing-edit" :disabled="busy" @click="removing = item.listing">Remove listing</button><div v-if="item.claim?.status === 'available' && removing === item.listing" class="cancel-confirm"><strong>Remove this listing?</strong><p>This item will no longer appear in the marketplace.</p><div><button type="button" class="quiet" :disabled="busy" @click="removing = null">Keep listing</button><button type="button" class="danger" :disabled="busy" @click="removeListing(item)">{{ busy ? 'Removing…' : 'Yes, remove listing' }}</button></div></div></div></article></div>
       </template>
     </section>
     <section v-if="page === 'item'" class="item-page">
@@ -291,7 +306,7 @@ onUnmounted(() => { clearPhoto(); clearInterval(timer); window.removeEventListen
             <p v-if="active.seller === user">You are signed in as the seller. Buyers can reserve this item; you cannot claim your own listing.</p>
             <p v-else>Reserve this item exclusively before paying the seller.</p>
           </div>
-          <p v-if="active.seller === user && !canEditListing(active)" class="form-help">Editing is closed because payment has been sent or the item is sold.</p><button v-if="active.seller === user && canEditListing(active)" class="dark listing-edit" :disabled="busy" @click="editListing(active)">Edit listing</button><div class="item-seller"><span class="seller-avatar">{{ active.seller[0]?.toUpperCase() }}</span><div><small>Listed by</small><strong>{{ active.seller }}</strong></div></div>
+          <p v-if="active.seller === user && !canEditListing(active)" class="form-help">Editing is closed because payment has been sent or the item is sold.</p><button v-if="active.seller === user && canEditListing(active)" class="dark listing-edit" :disabled="busy" @click="editListing(active)">Edit listing</button><div v-if="active.seller === user && active.claim?.status === 'available'" class="cancellation"><button v-if="removing !== active.listing" class="cancel-link" :disabled="busy" @click="removing = active.listing">Remove listing</button><div v-else class="cancel-confirm"><strong>Remove this listing?</strong><p>This item will no longer appear in the marketplace.</p><div><button class="quiet" :disabled="busy" @click="removing = null">Keep listing</button><button class="danger" :disabled="busy" @click="removeListing(active)">{{ busy ? 'Removing…' : 'Yes, remove listing' }}</button></div></div></div><div class="item-seller"><span class="seller-avatar">{{ active.seller[0]?.toUpperCase() }}</span><div><small>Listed by</small><strong>{{ active.seller }}</strong></div></div>
           <div class="pickup-line"><span>⌖</span><div><small>Pickup location</small><strong>{{ details(active).pickup }}</strong></div></div>
           <ol v-if="active.claim?.status !== 'available'" class="sale-progress" aria-label="Sale progress"><li v-for="(step, index) in steps" :key="step" :class="{ complete: index <= stepIndex(active) }" :aria-current="index === stepIndex(active) ? 'step' : undefined"><span>{{ index < stepIndex(active) ? '✓' : index + 1 }}</span>{{ step }}</li></ol>
 

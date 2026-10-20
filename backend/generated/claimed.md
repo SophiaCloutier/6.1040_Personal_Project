@@ -39,6 +39,8 @@ Defined in [Claiming](../design/concepts/Claiming.md), line 1.
   - Refuses `CLAIM_UNAVAILABLE`: This item already has an availability record.
 - `claim(claimer: Claimer, resource: Resource) : returns (resource: Resource)`
   - Refuses `CLAIM_UNAVAILABLE`: This item is no longer available.
+- `remove(resource: Resource) : returns (resource: Resource)`
+  - Refuses `CLAIM_UNAVAILABLE`: Only available items can be removed.
 - `checkAvailable(resource: Resource) : returns (resource: Resource)`
   - Refuses `CLAIM_UNAVAILABLE`: This item is no longer available.
 - `reserve(claimer: Claimer, resource: Resource, terms: String) : returns (resource: Resource, claimer: Claimer, terms: String)`
@@ -79,6 +81,8 @@ Defined in [Listing](../design/concepts/Listing.md), line 1.
 
 - `create(seller: Seller, details: String) : returns (listing: Listing)`
   - Refuses `INVALID_LISTING`: Enter valid listing information.
+- `authorizeRemoval(seller: Seller, listing: Listing) : returns (listing: Listing)`
+  - Refuses `INVALID_LISTING`: Only the seller can remove this listing.
 - `owner(listing: Listing) : returns (seller: Seller)`
   - Refuses `INVALID_LISTING`: This listing no longer exists.
 - `quote(listing: Listing, buyer: Seller, amount: String) : returns (seller: Seller, terms: String)`
@@ -229,7 +233,7 @@ Authored path: `Marketplace.Workflow.BuyerDenied`.
 ### listing edits are closed
 
 Authored path: `Marketplace.Workflow.EditingBlocked`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 48.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 49.
 
 ```view
 listing edits are closed — inputs (listing); outputs (); bindings ()
@@ -241,7 +245,7 @@ listing edits are closed — inputs (listing); outputs (); bindings ()
 ### private payment snapshot
 
 Authored path: `Marketplace.Workflow.PaymentSnapshot`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 46.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 47.
 
 ```view
 private payment snapshot — inputs (user, listing); outputs (terms, evidence, details); bindings () — answers at most one (terms, evidence, details)
@@ -295,7 +299,7 @@ Former "my messages" — inputs (user); bindings (message, listing, buyer, selle
 ### my offers
 
 Authored path: `Marketplace.Workflow.Offers`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```former
 Former "my offers" — inputs (user); bindings (offer, buyer, seller, listing, terms, status); promises exactly one record — forms:
@@ -351,7 +355,7 @@ Former "private conversation history" — inputs (user, listing, buyer); binding
 ### private transaction details
 
 Authored path: `Marketplace.Workflow.PrivateTransaction`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 42.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 43.
 
 ```former
 Former "private transaction details" — inputs (user, listing); bindings (terms, evidence, details); promises exactly one record — forms:
@@ -366,7 +370,7 @@ Former "private transaction details" — inputs (user, listing); bindings (terms
 ### public listing offers
 
 Authored path: `Marketplace.Workflow.ListingOffers`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 50.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 51.
 
 ```former
 Former "public listing offers" — inputs (listing); bindings (offer, buyer, seller, terms, status); promises exactly one record — forms:
@@ -390,6 +394,7 @@ Authored path: `Marketplace.Workflow.Marketplace`.
 Former "the marketplace" — inputs (user); bindings (listing, seller, details, status, claimer, paymentStatus, payer, payee); promises exactly one record — forms:
   a record of
     listings: each Listing._visible (reader: user) has (details, listing, seller)
+      where no Claiming._get (resource: listing) has (status: "removed")
       form a record of
         claim: a record of
           where Claiming._get (resource: listing) has (claimer, status)
@@ -408,13 +413,14 @@ Former "the marketplace" — inputs (user); bindings (listing, seller, details, 
 ### the public marketplace
 
 Authored path: `Marketplace.Workflow.PublicMarketplace`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 35.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 36.
 
 ```former
 Former "the public marketplace" — inputs (); bindings (listing, seller, details, status); promises exactly one record — forms:
   a record of
     listings: each Listing._publicAll () has (details, listing, seller)
       where no Claiming._get (resource: listing) has (status: "completed")
+      where no Claiming._get (resource: listing) has (status: "removed")
       form a record of
         claim: a record of
           where Claiming._get (resource: listing) has (status)
@@ -489,8 +495,8 @@ then
 ### Marketplace.Workflow.AcceptOffer
 
 Authored path: `Marketplace.Workflow.AcceptOffer`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 32.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when RequestBoundary.request (offer, path: "/marketplace/accept-offer", requestId, session)
@@ -501,8 +507,8 @@ then
 ### Marketplace.Workflow.AcceptOffer#2
 
 Authored path: `Marketplace.Workflow.AcceptOffer`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 32.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.AcceptOffer
@@ -515,8 +521,8 @@ then
 ### Marketplace.Workflow.AcceptOffer#3
 
 Authored path: `Marketplace.Workflow.AcceptOffer`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 32.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Negotiating.select (actor: user, offer, buyer, subject: listing, terms), asked by Marketplace.Workflow.AcceptOffer#2
@@ -527,8 +533,8 @@ then
 ### Marketplace.Workflow.AcceptOffer#4
 
 Authored path: `Marketplace.Workflow.AcceptOffer`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 32.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Claiming.reserve (claimer: buyer, resource: listing, terms), asked by Marketplace.Workflow.AcceptOffer#3
@@ -542,7 +548,7 @@ then
 
 Authored path: `Marketplace.Workflow.Activity`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 18.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 35.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 36.
 
 ```reaction
 when RequestBoundary.request (path: "/marketplace/activity", requestId, session)
@@ -554,7 +560,7 @@ then
 
 Authored path: `Marketplace.Workflow.Activity`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 18.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 35.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 36.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Activity
@@ -580,7 +586,7 @@ then
 
 Authored path: `Marketplace.Workflow.Cancel`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 15.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/cancel", requestId, session)
@@ -592,7 +598,7 @@ then
 
 Authored path: `Marketplace.Workflow.Cancel`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 15.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Cancel
@@ -606,7 +612,7 @@ then
 
 Authored path: `Marketplace.Workflow.Cancel`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 15.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
 
 ```reaction
 when TransactionConfirming.cancel (actor: user, subject: listing), asked by Marketplace.Workflow.Cancel#2
@@ -620,7 +626,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/claim", requestId, session)
@@ -632,7 +638,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Claim
@@ -647,7 +653,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when Listing.quote (amount: "", buyer: user, listing, seller, terms), asked by Marketplace.Workflow.Claim:allowed#2
@@ -659,7 +665,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when Claiming.reserve (claimer: user, resource: listing, terms), asked by Marketplace.Workflow.Claim:allowed#3
@@ -673,7 +679,7 @@ then
 
 Authored path: `Marketplace.Workflow.Claim`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Claim
@@ -687,7 +693,7 @@ then
 ### Marketplace.Workflow.CloseOffers
 
 Authored path: `Marketplace.Workflow.CloseOffers`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 44.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 45.
 
 ```reaction
 when Claiming.reserve (claimer: buyer, resource: listing, terms)
@@ -712,7 +718,7 @@ then
 
 Authored path: `Marketplace.Workflow.Confirm`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/confirm", requestId, session)
@@ -724,7 +730,7 @@ then
 
 Authored path: `Marketplace.Workflow.Confirm`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Confirm
@@ -738,7 +744,7 @@ then
 
 Authored path: `Marketplace.Workflow.Confirm`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 25.
 
 ```reaction
 when TransactionConfirming.confirmReceived (payee: user, subject: listing), asked by Marketplace.Workflow.Confirm#2
@@ -752,7 +758,7 @@ then
 
 Authored path: `Marketplace.Workflow.Edit`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 38.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
 
 ```reaction
 when RequestBoundary.request (details, listing, path: "/marketplace/edit", previous, requestId, session)
@@ -764,7 +770,7 @@ then
 
 Authored path: `Marketplace.Workflow.Edit`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 38.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Edit
@@ -779,7 +785,7 @@ then
 
 Authored path: `Marketplace.Workflow.Edit`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 38.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
 
 ```reaction
 when Listing.update (details, listing, previous, seller: user), asked by Marketplace.Workflow.Edit:editable#2
@@ -793,7 +799,7 @@ then
 
 Authored path: `Marketplace.Workflow.Edit`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 21.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 38.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 39.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Edit
@@ -807,7 +813,7 @@ then
 ### Marketplace.Workflow.FreezeReported
 
 Authored path: `Marketplace.Workflow.FreezeReported`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 48.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 49.
 
 ```reaction
 when TransactionConfirming.report (subject: listing)
@@ -818,7 +824,7 @@ then
 ### Marketplace.Workflow.FreezeReportedLegacy
 
 Authored path: `Marketplace.Workflow.FreezeReportedLegacy`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 48.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 49.
 
 ```reaction
 when TransactionConfirming.reportPaid (subject: listing)
@@ -840,8 +846,8 @@ then
 ### Marketplace.Workflow.OfferList
 
 Authored path: `Marketplace.Workflow.OfferList`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 28.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when RequestBoundary.request (path: "/marketplace/offers", requestId, session)
@@ -852,8 +858,8 @@ then
 ### Marketplace.Workflow.OfferList#2
 
 Authored path: `Marketplace.Workflow.OfferList`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 28.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.OfferList
@@ -866,8 +872,8 @@ then
 ### Marketplace.Workflow.Payment
 
 Authored path: `Marketplace.Workflow.Payment`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 42.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 28.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 43.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/payment", requestId, session)
@@ -878,8 +884,8 @@ then
 ### Marketplace.Workflow.Payment#2
 
 Authored path: `Marketplace.Workflow.Payment`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 42.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 28.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 43.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Payment
@@ -892,8 +898,8 @@ then
 ### Marketplace.Workflow.Propose
 
 Authored path: `Marketplace.Workflow.Propose`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when RequestBoundary.request (amount, listing, path: "/marketplace/offer", requestId, session)
@@ -904,8 +910,8 @@ then
 ### Marketplace.Workflow.Propose#2
 
 Authored path: `Marketplace.Workflow.Propose`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Propose
@@ -918,8 +924,8 @@ then
 ### Marketplace.Workflow.Propose#3
 
 Authored path: `Marketplace.Workflow.Propose`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Claiming.checkAvailable (resource: listing), asked by Marketplace.Workflow.Propose#2
@@ -933,8 +939,8 @@ then
 ### Marketplace.Workflow.Propose#4
 
 Authored path: `Marketplace.Workflow.Propose`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Listing.quote (amount, buyer: user, listing, seller, terms), asked by Marketplace.Workflow.Propose#3
@@ -945,8 +951,8 @@ then
 ### Marketplace.Workflow.Propose#5
 
 Authored path: `Marketplace.Workflow.Propose`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 31.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Negotiating.propose (buyer: user, seller, subject: listing, terms, offer), asked by Marketplace.Workflow.Propose#4
@@ -959,8 +965,8 @@ then
 ### Marketplace.Workflow.PublicOffers
 
 Authored path: `Marketplace.Workflow.PublicOffers`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 29.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 50.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 30.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 51.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/listing-offers", requestId)
@@ -1019,11 +1025,63 @@ then
   Claiming.release (claimer: buyer, resource: listing)
 ```
 
+### Marketplace.Workflow.Remove
+
+Authored path: `Marketplace.Workflow.Remove`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 53.
+
+```reaction
+when RequestBoundary.request (listing, path: "/marketplace/remove", requestId, session)
+then
+  Sessioning.current (session)
+```
+
+### Marketplace.Workflow.Remove#2
+
+Authored path: `Marketplace.Workflow.Remove`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 53.
+
+```reaction
+when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.Remove
+where
+  earlier, RequestBoundary.request (listing, path: "/marketplace/remove", requestId, session)
+then
+  Listing.authorizeRemoval (listing, seller: user)
+```
+
+### Marketplace.Workflow.Remove#3
+
+Authored path: `Marketplace.Workflow.Remove`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 53.
+
+```reaction
+when Listing.authorizeRemoval (listing, seller: user), asked by Marketplace.Workflow.Remove#2
+then
+  Claiming.remove (resource: listing)
+```
+
+### Marketplace.Workflow.Remove#4
+
+Authored path: `Marketplace.Workflow.Remove`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 22.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 53.
+
+```reaction
+when Claiming.remove (resource: listing), asked by Marketplace.Workflow.Remove#3
+where
+  earlier, RequestBoundary.request (listing, path: "/marketplace/remove", requestId, session)
+then
+  RequestBoundary.respond (listing, requestId)
+```
+
 ### Marketplace.Workflow.ReportEvidence
 
 Authored path: `Marketplace.Workflow.ReportEvidence`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 42.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 43.
 
 ```reaction
 when RequestBoundary.request (data, listing, mime, path: "/marketplace/report-evidence", requestId, session)
@@ -1034,8 +1092,8 @@ then
 ### Marketplace.Workflow.ReportEvidence#2
 
 Authored path: `Marketplace.Workflow.ReportEvidence`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 42.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 43.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.ReportEvidence
@@ -1048,8 +1106,8 @@ then
 ### Marketplace.Workflow.ReportEvidence#3
 
 Authored path: `Marketplace.Workflow.ReportEvidence`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 26.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 42.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 27.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 43.
 
 ```reaction
 when TransactionConfirming.report (data, mime, payer: user, subject: listing), asked by Marketplace.Workflow.ReportEvidence#2
@@ -1063,7 +1121,7 @@ then
 
 Authored path: `Marketplace.Workflow.ReportPaid`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
 
 ```reaction
 when RequestBoundary.request (listing, path: "/marketplace/report-paid", requestId, session)
@@ -1075,7 +1133,7 @@ then
 
 Authored path: `Marketplace.Workflow.ReportPaid`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.ReportPaid
@@ -1089,7 +1147,7 @@ then
 
 Authored path: `Marketplace.Workflow.ReportPaid`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 13.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 23.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 24.
 
 ```reaction
 when TransactionConfirming.reportPaid (payer: user, subject: listing), asked by Marketplace.Workflow.ReportPaid#2
@@ -1102,8 +1160,8 @@ then
 ### Marketplace.Workflow.ResolveOffer
 
 Authored path: `Marketplace.Workflow.ResolveOffer`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 32.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 33.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when RequestBoundary.request (decision, offer, path: "/marketplace/resolve-offer", requestId, session)
@@ -1114,8 +1172,8 @@ then
 ### Marketplace.Workflow.ResolveOffer#2
 
 Authored path: `Marketplace.Workflow.ResolveOffer`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 32.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 33.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Sessioning.current (session, subject: user), asked by Marketplace.Workflow.ResolveOffer
@@ -1128,8 +1186,8 @@ then
 ### Marketplace.Workflow.ResolveOffer#3
 
 Authored path: `Marketplace.Workflow.ResolveOffer`.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 32.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 33.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Negotiating.resolve (actor: user, decision, offer), asked by Marketplace.Workflow.ResolveOffer#2
@@ -1143,7 +1201,7 @@ then
 
 Authored path: `Marketplace.Workflow.StartTransaction`.
 - Covered by [Marketplace](../design/compositions/Marketplace.md), line 7.
-- Covered by [Marketplace](../design/compositions/Marketplace.md), line 40.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 41.
 
 ```reaction
 when Claiming.reserve (claimer: buyer, resource: listing, terms)
@@ -1463,6 +1521,7 @@ not listed here have no explicit input contract.
 - `/marketplace/offers` — requires `session`
 - `/marketplace/payment` — requires `session`, `listing`
 - `/marketplace/publish` — requires `session`, `details`
+- `/marketplace/remove` — requires `session`, `listing`
 - `/marketplace/report-evidence` — requires `session`, `listing`, `data`, `mime`
 - `/marketplace/report-paid` — requires `session`, `listing`
 - `/marketplace/resolve-offer` — requires `session`, `offer`, `decision`

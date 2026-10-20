@@ -37,6 +37,14 @@ claim (claimer: Claimer, resource: Resource) : returns (resource: Resource)
   then
     atomically set status to claimed and claimer to claimer
     returns resource
+remove (resource: Resource) : returns (resource: Resource)
+  where resource is not available
+  then
+    refuses CLAIM_UNAVAILABLE "Only available items can be removed."
+  where resource is available
+  then
+    atomically set status to removed so it cannot be reserved
+    returns resource
 checkAvailable (resource: Resource) : returns (resource: Resource)
   where resource is not available
   then

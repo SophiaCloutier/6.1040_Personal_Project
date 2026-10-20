@@ -33,14 +33,14 @@ const ReleaseCancelled = reaction(({ listing, buyer }) =>
 const BuyerAllowed = view('(buyer) may buy (listing)', ({ buyer, listing }) => where(Listing._mayBuy({ buyer, listing }).is({ allowed: true }))).holds();
 const BuyerDenied = view('(buyer) may not buy (listing)', ({ buyer, listing }) => where(Listing._mayBuy({ buyer, listing }).is({ allowed: false }))).holds();
 const Marketplace = former('the marketplace', ({ user }, { listing, seller, details, status, claimer, paymentStatus, payer, payee }) => form({
-  listings: each(Listing._visible({ reader: user }).is({ listing, seller, details })).form({
+  listings: each(Listing._visible({ reader: user }).is({ listing, seller, details })).where(no(Claiming._get({ resource: listing }).is({ status: 'removed' }))).form({
     listing, seller, details,
     claim: where(Claiming._get({ resource: listing }).is({ status, claimer })).form({ status, claimer }),
     transaction: where(whether(TransactionConfirming._get({ subject: listing }).is({ status: paymentStatus, payer, payee }))).form({ status: paymentStatus, payer, payee }),
   }),
 }));
 const PublicMarketplace = former('the public marketplace', (_input, { listing, seller, details, status }) => form({
-  listings: each(Listing._publicAll({}).is({ listing, seller, details })).where(no(Claiming._get({ resource: listing }).is({ status: 'completed' }))).form({
+  listings: each(Listing._publicAll({}).is({ listing, seller, details })).where(no(Claiming._get({ resource: listing }).is({ status: 'completed' })), no(Claiming._get({ resource: listing }).is({ status: 'removed' }))).form({
     listing, seller, details,
     claim: where(Claiming._get({ resource: listing }).is({ status })).form({ status }),
   }),
@@ -54,6 +54,11 @@ const Publish = endpoint('/marketplace/publish', ({ session, user, details, list
   .then(Sessioning.current({ session }).responds({ subject: user }))
   .then(Listing.create({ seller: user, details }).responds({ listing }))
   .then(respond({ listing })), { input: { required: ['session', 'details'] }, validators: { input: createInput } });
+const Remove = endpoint('/marketplace/remove', ({ session, user, listing }) => receive({ session, listing })
+  .then(Sessioning.current({ session }).responds({ subject: user }))
+  .then(Listing.authorizeRemoval({ seller: user, listing }))
+  .then(Claiming.remove({ resource: listing }))
+  .then(respond({ listing })), { input: { required: ['session', 'listing'] }, validators: { input: identityInput } });
 const Edit = endpoint('/marketplace/edit', ({ session, user, listing, details, previous }) => receive({ session, listing, details, previous })
   .then(Sessioning.current({ session }).responds({ subject: user }))
   .then(
@@ -119,5 +124,5 @@ const Cancel = endpoint('/marketplace/cancel', ({ session, user, listing }) => r
   .then(Sessioning.current({ session }).responds({ subject: user }))
   .then(TransactionConfirming.cancel({ actor: user, subject: listing }))
   .then(respond({ listing })), { input: { required: ['session', 'listing'] }, validators: { input: identityInput } });
-export const composition = { Workflow: { MakeAvailable, FreezeReported, FreezeReportedLegacy, EditingBlocked, StartTransaction, CloseOffers, CompleteClaim, ReleaseCancelled, BuyerAllowed, BuyerDenied, Marketplace, PublicMarketplace, Browse, Activity, Publish, Edit, Claim, ReportPaid, ReportEvidence, PaymentSnapshot, PrivateTransaction, Payment, Offers, ListingOffers, PublicOffers, OfferList, Propose, AcceptOffer, ResolveOffer, Confirm, Cancel } };
+export const composition = { Workflow: { MakeAvailable, FreezeReported, FreezeReportedLegacy, EditingBlocked, StartTransaction, CloseOffers, CompleteClaim, ReleaseCancelled, BuyerAllowed, BuyerDenied, Marketplace, PublicMarketplace, Browse, Activity, Publish, Remove, Edit, Claim, ReportPaid, ReportEvidence, PaymentSnapshot, PrivateTransaction, Payment, Offers, ListingOffers, PublicOffers, OfferList, Propose, AcceptOffer, ResolveOffer, Confirm, Cancel } };
 

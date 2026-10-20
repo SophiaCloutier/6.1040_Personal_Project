@@ -19,6 +19,7 @@ Marketplace.Workflow.Activity at /marketplace/activity
 Marketplace.Workflow.Browse at /marketplace/list
 Marketplace.Workflow.Publish at /marketplace/publish
 Marketplace.Workflow.Edit at /marketplace/edit
+Marketplace.Workflow.Remove at /marketplace/remove
 Marketplace.Workflow.Claim at /marketplace/claim
 Marketplace.Workflow.ReportPaid at /marketplace/report-paid
 Marketplace.Workflow.Confirm at /marketplace/confirm
@@ -48,3 +49,5 @@ Marketplace.Workflow.ResolveOffer at /marketplace/resolve-offer
 [Editing blocked](view:Marketplace.Workflow.EditingBlocked) prevents edits once payment is reported or a claim is completed, including records created before this restriction. [Freeze report](reaction:Marketplace.Workflow.FreezeReported) and [freeze legacy report](reaction:Marketplace.Workflow.FreezeReportedLegacy) close Listing updates durably after successful payment reporting. Listing uses an atomic unlocked condition when updating. Failed reports do not freeze listings. Reserved but unpaid listings remain editable, with transaction terms frozen as before.
 
 [Listing offer history](former:Marketplace.Workflow.ListingOffers) and [public offers](reaction:Marketplace.Workflow.PublicOffers) show all offers for a listing to every visitor, including signed-out visitors. Public terms contain only price; payment instructions remain private. Offer actions retain buyer and seller authorization.
+
+[Remove listing](reaction:Marketplace.Workflow.Remove) authenticates its seller before atomically moving an available claim to removed. Removal competes with reservations on the same availability record, so only one can win. Removed listings disappear from public browsing and signed-in marketplace/activity responses, and cannot be claimed or accepted through offers. Listing records, offers, and conversations are retained.

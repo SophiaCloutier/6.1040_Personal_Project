@@ -69,6 +69,10 @@ export class ListingConcept {
     if (!row) throw new InvalidListing('This listing no longer exists.');
     return { seller: row.seller };
   }
+  async authorizeRemoval({ seller, listing }: { seller: string; listing: string }) {
+    if (!await this.rows.findOne({ listing, seller })) throw new InvalidListing('Only the seller can remove this listing.');
+    return { listing };
+  }
   async _visible({ reader }: { reader: string }): Promise<Array<{ listing: string; seller: string; details: string }>> {
     return (await this._all({})).map(row => {
       if (row.seller === reader) return row;

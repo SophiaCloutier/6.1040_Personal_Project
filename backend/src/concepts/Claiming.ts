@@ -18,6 +18,11 @@ export class ClaimingConcept {
     if (!await this.rows.findOne({ resource, status: 'available' })) throw new ClaimUnavailable('This item is no longer available.');
     return { resource };
   }
+  async remove({ resource }: { resource: string }) {
+    const result = await this.rows.updateOne({ resource, status: 'available' }, { $set: { status: 'removed' } });
+    if (!result.modifiedCount) throw new ClaimUnavailable('Only available items can be removed.');
+    return { resource };
+  }
   async reserve({ claimer, resource, terms }: { claimer: string; resource: string; terms: string }) {
     const result = await this.rows.updateOne({ resource, status: 'available' }, { $set: { status: 'claimed', claimer, terms } });
     if (!result.modifiedCount) throw new ClaimUnavailable('This item is no longer available.');

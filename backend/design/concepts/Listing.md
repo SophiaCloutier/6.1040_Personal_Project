@@ -33,6 +33,14 @@ create (seller: Seller, details: String) : returns (listing: Listing)
   then
     create a fresh listing with seller and details
     returns listing
+authorizeRemoval (seller: Seller, listing: Listing) : returns (listing: Listing)
+  where listing is missing or belongs to another seller
+  then
+    refuses INVALID_LISTING "Only the seller can remove this listing."
+  where seller owns listing
+  then
+    bind listing to itself
+    returns listing
 owner (listing: Listing) : returns (seller: Seller)
   where listing is missing
   then
