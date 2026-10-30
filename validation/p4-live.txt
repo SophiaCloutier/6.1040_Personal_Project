@@ -1,0 +1,15 @@
+PASS: deployed health
+PASS: deployed frontend
+PASS: guest cannot read signed-in activity
+PASS: two separate accounts
+PASS: seller publishes
+PASS: public listing hides payment instructions
+PASS: buyer cannot remove seller listing
+PASS: seller cannot buy own listing
+PASS: buyer reserves listing
+PASS: receipt before payment is rejected
+PASS: seller cannot report buyer payment
+PASS: reservation survives sign-out and new session
+PASS: buyer cancels unpaid reservation
+PASS: seller removes released validation listing
+PASS: removed listing absent from public browsing

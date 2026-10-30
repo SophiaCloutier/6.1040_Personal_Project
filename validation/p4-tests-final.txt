@@ -1,0 +1,65 @@
+bun test v1.4.2 (744846f84)
+
+tests\accounts.test.ts:
+(pass) Authenticating rejects weak passwords [6.18ms]
+(pass) Authenticating stores a salted hash and authenticates after reconstruction [907.85ms]
+(pass) Authenticating rejects duplicate usernames and incorrect passwords [881.83ms]
+(pass) Sessioning persists an active session across reconstruction [84.59ms]
+(pass) Sessioning refuses a session after sign-out [31.57ms]
+(pass) Sessioning refuses an expired session [27.63ms]
+
+tests\activity.test.ts:
+(pass) selling puts confirmations first and sold last, preserving newest order within each group [0.61ms]
+(pass) edits close on reported payment or either completed state, but unpaid reservations remain editable [0.17ms]
+
+tests\beta.test.ts:
+(pass) beta journey: edits, competing offers, frozen terms, private evidence and conversations [3017.12ms]
+(pass) offers may be declined or withdrawn; full-price reservations supersede proposals [1107.12ms]
+(pass) legacy reservations retain participant-only payment instructions [1301.06ms]
+
+tests\concepts.test.ts:
+(pass) Listing rejects invalid prices, required fields, and unsafe image URLs [1.93ms]
+(pass) Listing preserves seller identity and prevents self-purchase [73.37ms]
+(pass) Listing preserves ordered galleries and rejects oversized or unsafe galleries [9.26ms]
+(pass) Listing migrates a legacy single photo to an ordered gallery [11.37ms]
+(pass) Listing normalizes and deduplicates tags and rejects overlong tags [10.80ms]
+(pass) Listing normalizes optional sizes and rejects non-text sizes [16.81ms]
+(pass) Claiming permits only one claimant for an available resource [69.63ms]
+(pass) Claiming rejects release and completion by another claimant [19.89ms]
+(pass) Claiming releases a reservation for reuse and completes a later claim [31.71ms]
+(pass) TransactionConfirming follows report then receipt confirmation [29.67ms]
+(pass) TransactionConfirming rejects duplicate starts, premature receipt, and wrong payer [6.80ms]
+(pass) TransactionConfirming rejects receipt confirmation by another payee [5.31ms]
+(pass) payment reporting and cancellation cannot both win; cancellation permits a fresh transaction [9.37ms]
+
+tests\images.test.ts:
+(pass) photo uploads validate content, resize, persist, and require authentication [569.79ms]
+
+tests\journey.test.ts:
+(pass) empty-database journey, role enforcement, concurrent claims, and persistence [640.81ms]
+
+tests\messaging.test.ts:
+(pass) busy threads do not hide older conversations and private thread history stays scoped [472.93ms]
+(pass) freezing a listing refuses subsequent concept updates without changing its details [83.20ms]
+
+tests\negotiating.test.ts:
+(pass) Negotiating rejects self-offers without creating state [26.07ms]
+(pass) Negotiating rejects unauthorized selection and resolution without changing offers [76.09ms]
+(pass) Negotiating selects terms without reserving or changing pending offers [87.71ms]
+(pass) Negotiating closes competing offers idempotently and refuses changes to closed offers [285.19ms]
+
+tests\photo-framing.test.ts:
+(pass) drag follows the pointer and stops at image edges without exposing empty space [0.32ms]
+(pass) zoom supports old saved positions and stays within the supported crop range [0.17ms]
+(pass) item viewing can zoom out to fit the full image without changing editor zoom limits [0.07ms]
+
+tests\removal.test.ts:
+(pass) only sellers can remove available listings; removal and reservation are exclusive [1691.79ms]
+
+tests\size-filter.test.ts:
+(pass) size filters preserve unsized items and restrict only items with a size [0.69ms]
+
+ 37 pass
+ 0 fail
+ 256 expect() calls
+Ran 37 tests across 11 files. [12.50s]

@@ -1,43 +1,41 @@
 # Claimed!
 
-Claimed! is a marketplace designed specifically for MIT senior sales, making it easier for students to discover, buy, and sell secondhand items within the MIT community.
+Claimed! is a marketplace for MIT senior sales, helping students discover, buy, and sell secondhand items. It supports fixed-price claims, offers, messaging, and confirmation of payments made outside the app.
 
-## Beta submission
+## P4 submission
 
 - [Live app](https://claimed.mit-sdg.dev/)
-- [Updated buying and selling journeys](Design/5.%20User%20Journey.md)
-- [Visual design study and annotations](Design/6.%20Visual%20Study.md)
-- [Automated tests](backend/tests) and [saved test output](validation/p3-tests.txt)
-- [Beta Video](https://youtu.be/okTUj_0g6fc)
+- [Final design summary](Design/7.%20Final%20Design.md)
+- [Narrated demo video](https://youtu.be/okTUj_0g6fc?si=KFJ8KMpkkZE8IR1P)
+- [Validation record](validation/P4-validation.md) and [automated tests](backend/tests)
 
-## Run the app
+## Build, run, and test locally
 
-See [local setup](SETUP.md) for Docker MongoDB and the Bun/Vue app. The interface runs at http://localhost:3000 after building and starting the backend.
+Install Bun 1.4.2 and Docker Desktop, then run from the repository root:
 
-## Run the tests
+```powershell
+docker compose up -d mongo
+cd backend
+bun install --frozen-lockfile
+bun run build
+bun run start
+```
 
-Start MongoDB with `docker compose up -d mongo` from the repository root. Then run `bun install` and `bun test` from `backend`. See [test setup and isolation](SETUP.md#automated-tests) for database requirements and how to save output. Tests use temporary databases; do not point them at the deployed database.
+Open http://localhost:3000. Keep MongoDB running for tests; in another terminal, from `backend`:
 
-## Current implementation specifications
+```powershell
+bun test
+bun run check
+bun run check:web
+```
 
-The current Beta specifications are in [backend/design](backend/design): [concepts](backend/design/concepts), [compositions and endpoints](backend/design/compositions), and [application types](backend/design/types.md). The [generated application contract](backend/generated/claimed.md) documents the assembled actions, queries, and HTTP boundary. The original proposal below is retained as design history.
+See [setup and test isolation](SETUP.md) for configuration, persistence, and saving test output. Tests require local MongoDB and use temporary databases.
 
-## Design documents
+## Specifications and design history
 
-- [Problem Framing](Design/1.%20Problem%20Framing.md)
-- [Stakeholders](Design/1.1%20Stakeholders.md)
-- [Application Pitch](Design/2.%20Application%20Pitch.md)
-- [Original Concepts & Reactions proposal](Design/3.%20Concepts%20%26%20Reactions.md)
-- [UI Sketches](Design/4.%20UI%20sketches.md)
-- [User Journey](Design/5.%20User%20Journey.md)
-- [Visual Design Study](Design/6.%20Visual%20Study.md)
-- [Notebook](Notebook.md)
-
-
-## Demo
-
-[Alpha demo](https://youtu.be/WtIpPg8ImIA)
-
-[Beta demo](https://youtu.be/okTUj_0g6fc)
-
-
+- Current [concept specifications](backend/design/concepts), [reactions and endpoints](backend/design/compositions), [types](backend/design/types.md), and [generated application contract](backend/generated/claimed.md)
+- [Problem framing](Design/1.%20Problem%20Framing.md), [stakeholders](Design/1.1%20Stakeholders.md), and [application pitch](Design/2.%20Application%20Pitch.md)
+- [P1 concept proposal](Design/3.%20Concepts%20%26%20Reactions.md) and [UI sketches](Design/4.%20UI%20sketches.md)
+- [Buying and selling journeys](Design/5.%20User%20Journey.md), [P3 visual study](Design/6.%20Visual%20Study.md), and [design notebook](Notebook.md)
+- [Validation evidence index](validation/README.md), including earlier test runs and screenshots
+- [Alpha demo](https://youtu.be/WtIpPg8ImIA)

@@ -1,6 +1,14 @@
 # Local development setup
 
-From the repository root:
+## Requirements
+
+- Bun 1.4.2 (the version declared in package.json).
+- Docker Desktop with its Linux engine running, for MongoDB.
+- Run commands from the repository root unless a step changes directories.
+
+## Install and run
+
+Start MongoDB and wait until it reports healthy:
 
 ```powershell
 docker compose up -d mongo
@@ -8,42 +16,69 @@ docker compose ps
 docker compose exec mongo mongosh --quiet --eval "db.adminCommand('ping')"
 ```
 
-MongoDB is available at `mongodb://127.0.0.1:27017`. Application data will use the `claimed` database. The named volume retains data across container restarts. `docker compose stop` stops the database without deleting data.
-
-Backend scaffold validation:
+Install the locked dependencies, build the frontend, and start the application:
 
 ```powershell
 cd backend
-bun install
-bun run generate
-bun run check
-bun run check:web
-bun test
+bun install --frozen-lockfile
 bun run build
 bun run start
 ```
 
-Open http://localhost:3000.
-After changing frontend source, run `bun run build` and refresh the browser. Backend source changes require restarting `bun run start`. Keep the same database name to retain your listings.
+Open http://localhost:3000. No seed data is required: register accounts and publish listings through the app.
 
-For isolated browser checks, set `PORT`, matching `PUBLIC_ORIGIN`, and a separate `MONGODB_DATABASE` before starting. For example, port 3001 uses `http://localhost:3001` as its public origin. These variables default to the original localhost:3000 setup.
+After changing frontend source, rebuild and refresh the browser. Backend changes require restarting the server.
 
-## Automated tests
+## Configuration and persistence
 
-Requirements: Bun and a running MongoDB at `mongodb://127.0.0.1:27017`. Start the database from the repository root with `docker compose up -d mongo`. No application server or seeded application data is needed.
+Local defaults work without an environment file. For overrides, copy `backend/.env.example` to `backend/.env` and edit it. Bun reads that file when commands run from `backend`. Environment files containing credentials are ignored by Git.
 
-From the repository root, in PowerShell:
+| Variable | Local default | Purpose |
+| --- | --- | --- |
+| MONGODB_URI | mongodb://127.0.0.1:27017/claimed | MongoDB connection |
+| MONGODB_DATABASE | claimed | Application database |
+| PORT | 3000 | Backend HTTP port |
+| PUBLIC_ORIGIN | http://localhost:3000 | Allowed browser origin; match the backend URL |
+| UPLOAD_DIRECTORY | backend/uploads | Local photo storage; optional override |
+
+The database uses the named Docker volume `claimed_mongo`; uploads are stored separately in `backend/uploads`. Both persist across application restarts. `docker compose stop` stops MongoDB without deleting its volume. Keep the same database and upload directory to retain application data.
+
+For an isolated local instance, use a separate database name and matching `PORT`/`PUBLIC_ORIGIN`, such as port 3001 and http://localhost:3001.
+
+Production requires `NODE_ENV=production`, `MONGODB_URI`, `PUBLIC_ORIGIN`, and S3 storage configuration (`S3_BUCKET` and the credentials/endpoint settings supplied by the hosting platform). The deployed class platform supplies production configuration; do not commit its credentials. Local development uses filesystem storage and requires no S3 configuration.
+
+## Automated tests and checks
+
+Keep local MongoDB running. No application server, seed data, or production credentials are required. From `backend`:
 
 ```powershell
-cd backend
-bun install
 bun test
-# To save the execution output:
-bun test 2>&1 | Tee-Object -FilePath ../validation/p3-tests.txt
+bun run check
+bun run check:web
+bun run build
 ```
 
-Each database-backed test file or scenario selects a fresh UUID-named database and removes that database afterward. Fixtures are created through concept actions or the HTTP handler. The session-expiry test deliberately changes an expiration timestamp to simulate time passing. Tests also check rejected requests, participant access, competing claims, cancellation races, saved purchase terms, private payment evidence, and message history.
+The database-backed tests create temporary UUID-named databases and remove them afterward. Fixtures are created through concept actions or the HTTP handler. The session-expiry test changes a timestamp to simulate time passing.
 
-Use local MongoDB for this suite: some tests explicitly connect to localhost. Do not set `MONGODB_URI` to the deployed database or use production credentials. If tests report `ECONNREFUSED 127.0.0.1:27017`, start Docker Desktop and the MongoDB container before retrying.
+Use local MongoDB: some tests explicitly connect to localhost. Do not configure the suite with a deployed database. If it reports `ECONNREFUSED 127.0.0.1:27017`, check that Docker Desktop is running and MongoDB is healthy.
 
-Additional implementation checks, from `backend`, are `bun run check`, `bun run check:web`, and `bun run build`. The [validation record](validation/P3-validation.md) distinguishes automated integration tests from checks performed through the deployed interface.
+To save output in PowerShell, from `backend`:
+
+```powershell
+bun test 2>&1 | Tee-Object -FilePath ../validation/p4-tests-final.txt
+# Preserve the test runner's exit status in scripted checks:
+exit $LASTEXITCODE
+```
+
+See the [P4 validation record](validation/P4-validation.md) for results and the [validation index](validation/README.md) for historical evidence. The live check is separate and explicitly opt-in because it creates test records on the deployed app.
+
+## Updating specifications
+
+Concept specifications live in `backend/design/concepts`, and compositions live in `backend/design/compositions`. Generated artifacts are tracked for reproducibility. After intentionally changing specifications, compositions, or the HTTP boundary, regenerate and verify them from `backend`:
+
+```powershell
+bun run generate
+bun run check
+```
+
+Generation is not required to install or start the existing application. Review generated changes alongside the source change.
