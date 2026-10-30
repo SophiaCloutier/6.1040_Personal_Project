@@ -30,6 +30,15 @@ const ReleaseCancelled = reaction(({ listing, buyer }) =>
   when(TransactionConfirming.cancel({ subject: listing }).responds({ payer: buyer }))
     .then(Claiming.release({ resource: listing, claimer: buyer })));
 
+const ReleaseRejected = reaction(({ listing, buyer }) =>
+  when(TransactionConfirming.rejectPayment({ subject: listing, decision: 'relist' }).responds({ payer: buyer }))
+    .then(Listing.unfreeze({ listing }).responds({}))
+    .then(Claiming.release({ resource: listing, claimer: buyer })));
+const RejectPayment = endpoint('/marketplace/reject-payment', ({ session, user, listing, decision }) => receive({ session, listing, decision })
+  .then(Sessioning.current({ session }).responds({ subject: user }))
+  .then(TransactionConfirming.rejectPayment({ payee: user, subject: listing, decision }))
+  .then(respond({ listing })), { input: { required: ['session', 'listing', 'decision'] }, validators: { input: validator(v => Object.keys(v).length === 3 && (typeof v.session === 'string' || v.session === null) && typeof v.listing === 'string' && v.listing.length > 0 && v.listing.length <= 100 && ['retry', 'relist'].includes(String(v.decision)), 'Choose return to buyer or make available.') } });
+
 const BuyerAllowed = view('(buyer) may buy (listing)', ({ buyer, listing }) => where(Listing._mayBuy({ buyer, listing }).is({ allowed: true }))).holds();
 const BuyerDenied = view('(buyer) may not buy (listing)', ({ buyer, listing }) => where(Listing._mayBuy({ buyer, listing }).is({ allowed: false }))).holds();
 const Marketplace = former('the marketplace', ({ user }, { listing, seller, details, status, claimer, paymentStatus, payer, payee }) => form({
@@ -124,5 +133,5 @@ const Cancel = endpoint('/marketplace/cancel', ({ session, user, listing }) => r
   .then(Sessioning.current({ session }).responds({ subject: user }))
   .then(TransactionConfirming.cancel({ actor: user, subject: listing }))
   .then(respond({ listing })), { input: { required: ['session', 'listing'] }, validators: { input: identityInput } });
-export const composition = { Workflow: { MakeAvailable, FreezeReported, FreezeReportedLegacy, EditingBlocked, StartTransaction, CloseOffers, CompleteClaim, ReleaseCancelled, BuyerAllowed, BuyerDenied, Marketplace, PublicMarketplace, Browse, Activity, Publish, Remove, Edit, Claim, ReportPaid, ReportEvidence, PaymentSnapshot, PrivateTransaction, Payment, Offers, ListingOffers, PublicOffers, OfferList, Propose, AcceptOffer, ResolveOffer, Confirm, Cancel } };
+export const composition = { Workflow: { RejectPayment, ReleaseRejected, MakeAvailable, FreezeReported, FreezeReportedLegacy, EditingBlocked, StartTransaction, CloseOffers, CompleteClaim, ReleaseCancelled, BuyerAllowed, BuyerDenied, Marketplace, PublicMarketplace, Browse, Activity, Publish, Remove, Edit, Claim, ReportPaid, ReportEvidence, PaymentSnapshot, PrivateTransaction, Payment, Offers, ListingOffers, PublicOffers, OfferList, Propose, AcceptOffer, ResolveOffer, Confirm, Cancel } };
 

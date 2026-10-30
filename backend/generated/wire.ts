@@ -232,6 +232,17 @@ export type ClaimedWire = {
     };
     error: { error: AppWideError | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_LISTING" | "UNKNOWN_SESSION" };
   };
+  "/marketplace/reject-payment": {
+    input: {
+      "decision": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["rejectPayment"]>[0], ["decision"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["rejectPayment"]>[0], ["subject"]>>;
+      "session": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Sessioning"]["current"]>[0], ["session"]>>;
+    };
+    output: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["rejectPayment"]>[0], ["subject"]>>;
+    };
+    error: { error: AppWideError | "CLAIM_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_TRANSACTION" | "UNKNOWN_SESSION" };
+  };
   "/marketplace/remove": {
     input: {
       "listing": Jsonify<OneOf<[AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Listing"]["authorizeRemoval"]>[0], ["listing"]>, AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["Claiming"]["remove"]>[0], ["resource"]>]>>;
@@ -568,6 +579,16 @@ export type ClaimedWireHttp = {
       "listing": Jsonify<AtPath<Awaited<ReturnType<(typeof ApplicationConceptSet.concepts)["Listing"]["create"]>>, ["listing"]>>;
     };
     error: { error: HttpAppWideError | "CONFLICT" | "INVALID_REQUEST" | "UNAUTHORIZED" };
+  };
+  "/marketplace/reject-payment": {
+    input: {
+      "decision": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["rejectPayment"]>[0], ["decision"]>>;
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["rejectPayment"]>[0], ["subject"]>>;
+    };
+    output: {
+      "listing": Jsonify<AtPath<Parameters<(typeof ApplicationConceptSet.concepts)["TransactionConfirming"]["rejectPayment"]>[0], ["subject"]>>;
+    };
+    error: { error: HttpAppWideError | "CONFLICT" | "FORBIDDEN" | "INVALID_REQUEST" | "UNAUTHORIZED" };
   };
   "/marketplace/remove": {
     input: {

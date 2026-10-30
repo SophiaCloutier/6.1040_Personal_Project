@@ -18,11 +18,11 @@ export class TransactionConfirmingConcept {
     return { subject };
   }
   async report({ payer, subject, data, mime }: { payer: string; subject: string; data: string; mime: string }) {
-    const row = await this.rows.findOne({ payer, subject, status: 'awaitingPayment' });
+    const row = await this.rows.findOne({ payer, subject, status: { $in: ['awaitingPayment', 'paymentRejected'] } });
     if (!row) throw new InvalidTransaction('Only the buyer can report an unpaid transaction.');
     if (row.terms && JSON.parse(row.terms).requireProof && !data) throw new InvalidTransaction('Attach payment evidence before reporting payment.');
     const evidence = data ? 'data:image/webp;base64,' + (await encodePhoto(data, mime)).toString('base64') : '';
-    const result = await this.rows.updateOne({ _id: row._id, status: 'awaitingPayment' }, { $set: { status: 'awaitingConfirmation', evidence } });
+    const result = await this.rows.updateOne({ _id: row._id, status: row.status }, { $set: { status: 'awaitingConfirmation', evidence } });
     if (!result.modifiedCount) throw new InvalidTransaction('This reservation changed. Reopen it before reporting payment.');
     return { subject };
   }
@@ -31,9 +31,9 @@ export class TransactionConfirmingConcept {
     return row ? [{ terms: row.terms ?? '{}', evidence: row.evidence ?? '' }] : [];
   }
   async reportPaid({ payer, subject }: { payer: string; subject: string }) {
-    const row = await this.rows.findOne({ payer, subject, status: 'awaitingPayment' });
+    const row = await this.rows.findOne({ payer, subject, status: { $in: ['awaitingPayment', 'paymentRejected'] } });
     if (row?.terms && JSON.parse(row.terms).requireProof) throw new InvalidTransaction('Attach payment evidence before reporting payment.');
-    const result = await this.rows.updateOne({ payer, subject, status: 'awaitingPayment' }, { $set: { status: 'awaitingConfirmation' } });
+    const result = await this.rows.updateOne({ payer, subject, status: { $in: ['awaitingPayment', 'paymentRejected'] } }, { $set: { status: 'awaitingConfirmation' } });
     if (!result.modifiedCount) throw new InvalidTransaction('Only the buyer can report payment on an unpaid transaction.');
     return { subject };
   }
@@ -41,6 +41,18 @@ export class TransactionConfirmingConcept {
     const result = await this.rows.updateOne({ payee, subject, status: 'awaitingConfirmation' }, { $set: { status: 'confirmed' } });
     if (!result.modifiedCount) throw new InvalidTransaction('Only the seller can confirm a payment reported by the buyer.');
     return { subject };
+  }
+  async rejectPayment({ payee, subject, decision }: { payee: string; subject: string; decision: string }) {
+    if (!['retry', 'relist'].includes(decision)) throw new InvalidTransaction('Choose return to buyer or make available.');
+    const filter = { payee, subject, status: 'awaitingConfirmation' };
+    if (decision === 'relist') {
+      const row = await this.rows.findOneAndDelete(filter);
+      if (!row) throw new InvalidTransaction('Only the seller can reject a reported payment.');
+      return { subject, payer: row.payer, decision };
+    }
+    const row = await this.rows.findOneAndUpdate(filter, { $set: { status: 'paymentRejected', evidence: '' } });
+    if (!row) throw new InvalidTransaction('Only the seller can reject a reported payment.');
+    return { subject, payer: row.payer, decision };
   }
   async cancel({ actor, subject }: { actor: string; subject: string }) {
     const row = await this.rows.findOneAndDelete({ subject, status: 'awaitingPayment', $or: [{ payer: actor }, { payee: actor }] });

@@ -47,6 +47,10 @@ export class ListingConcept {
     await this.rows.updateOne({ listing }, { $set: { locked: true } });
     return { listing };
   }
+  async unfreeze({ listing }: { listing: string }) {
+    await this.rows.updateOne({ listing }, { $set: { locked: false } });
+    return { listing };
+  }
   async create({ seller, details }: { seller: string; details: string }) {
     const normalized = this.#normalize(details);
     const listing = crypto.randomUUID();

@@ -14,3 +14,7 @@ test('edits close on reported payment or either completed state, but unpaid rese
   expect(canEditListing(sale('sold', '', 'completed'))).toBe(false);
   expect(canEditListing(sale('confirmed', 'confirmed'))).toBe(false);
 });
+
+test('a rejected payment awaiting buyer correction keeps listing edits closed', () => {
+  expect(canEditListing(sale('retry', 'paymentRejected'))).toBe(false);
+});

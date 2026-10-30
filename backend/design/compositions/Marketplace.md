@@ -24,6 +24,7 @@ Marketplace.Workflow.Claim at /marketplace/claim
 Marketplace.Workflow.ReportPaid at /marketplace/report-paid
 Marketplace.Workflow.Confirm at /marketplace/confirm
 Marketplace.Workflow.Cancel at /marketplace/cancel
+Marketplace.Workflow.RejectPayment at /marketplace/reject-payment
 Marketplace.Workflow.ReportEvidence at /marketplace/report-evidence
 Marketplace.Workflow.Payment at /marketplace/payment
 Marketplace.Workflow.OfferList at /marketplace/offers
@@ -51,3 +52,5 @@ Marketplace.Workflow.ResolveOffer at /marketplace/resolve-offer
 [Listing offer history](former:Marketplace.Workflow.ListingOffers) and [public offers](reaction:Marketplace.Workflow.PublicOffers) show all offers for a listing to every visitor, including signed-out visitors. Public terms contain only price; payment instructions remain private. Offer actions retain buyer and seller authorization.
 
 [Remove listing](reaction:Marketplace.Workflow.Remove) authenticates its seller before atomically moving an available claim to removed. Removal competes with reservations on the same availability record, so only one can win. Removed listings disappear from public browsing and signed-in marketplace/activity responses, and cannot be claimed or accepted through offers. Listing records, offers, and conversations are retained.
+
+[Reject payment](reaction:Marketplace.Workflow.RejectPayment) lets only the seller reject a reported payment. Retry sets paymentRejected, clears evidence, and preserves the buyer and frozen terms for another report. [Release rejected](reaction:Marketplace.Workflow.ReleaseRejected) unlocks the listing before releasing the claim when the seller chooses relist. Atomic rejection competes with confirmation so only one succeeds.

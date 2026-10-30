@@ -57,6 +57,11 @@ quote (listing: Listing, buyer: Seller, amount: String) : returns (seller: Selle
   then
     snapshot listing details with offered price if supplied
     returns seller, terms
+unfreeze (listing: Listing) : returns (listing: Listing)
+  where true
+  then
+    unlock listing after a rejected transaction is removed, before releasing its claim
+    returns listing
 freeze (listing: Listing) : returns (listing: Listing)
   where true
   then

@@ -45,7 +45,7 @@ report (payer: Payer, subject: Subject, data: String, mime: String) : returns (s
     refuses INVALID_TRANSACTION "Attach valid evidence to your unpaid transaction."
   where transaction belongs to payer and evidence satisfies its terms
   then
-    sanitize any image and atomically change awaitingPayment to awaitingConfirmation with private evidence
+    sanitize any image and atomically change awaitingPayment or paymentRejected to awaitingConfirmation with private evidence
     returns subject
 start (payer: Payer, payee: Payee, subject: Subject) : returns (subject: Subject)
   where subject already has a transaction
@@ -56,10 +56,10 @@ start (payer: Payer, payee: Payee, subject: Subject) : returns (subject: Subject
     create a transaction awaitingPayment with payer and payee
     returns subject
 reportPaid (payer: Payer, subject: Subject) : returns (subject: Subject)
-  where subject is not awaitingPayment for payer or saved terms require evidence
+  where subject is neither awaitingPayment nor paymentRejected for payer or saved terms require evidence
   then
     refuses INVALID_TRANSACTION "Only the buyer can report payment on an unpaid transaction."
-  where subject is awaitingPayment for payer and saved terms do not require evidence
+  where subject is awaitingPayment or paymentRejected for payer and saved terms do not require evidence
   then
     set status to awaitingConfirmation
     returns subject
@@ -71,6 +71,14 @@ cancel (actor: Actor, subject: Subject) : returns (subject: Subject, payer: Paye
   then
     atomically remove the transaction
     returns subject, payer
+rejectPayment (payee: Payee, subject: Subject, decision: String) : returns (subject: Subject, payer: Payer, decision: String)
+  where subject is not awaitingConfirmation for payee or decision is not retry or relist
+  then
+    refuses INVALID_TRANSACTION "Only the seller can reject a reported payment."
+  where subject is awaitingConfirmation for payee and decision is retry or relist
+  then
+    atomically delete transaction for relist, or set paymentRejected and clear evidence for retry; preserve saved terms
+    returns subject, payer, decision
 confirmReceived (payee: Payee, subject: Subject) : returns (subject: Subject)
   where subject is not awaitingConfirmation for payee
   then
