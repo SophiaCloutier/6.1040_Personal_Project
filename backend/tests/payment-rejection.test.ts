@@ -38,6 +38,17 @@ test('seller rejects payment for retry or relisting; authorization and competing
     expect(payment.evidence).toBe(''); expect(JSON.parse(payment.terms).price).toBe(20); expect(JSON.parse(payment.terms).requireProof).toBe(true);
     expect((await call('/marketplace/report-paid', { listing }, buyer.cookie)).status).toBe(403);
     expect((await call('/marketplace/confirm', { listing }, seller.cookie)).status).toBe(403);
+    expect((await call('/marketplace/cancel', { listing }, other.cookie)).status).toBe(403);
+    expect((await call('/marketplace/cancel', { listing }, seller.cookie)).status).toBe(200);
+    expect((await state()).claim.status).toBe('available');
+    const publicItem = (await call('/marketplace/list')).body.marketplace.listings.find((i: any) => i.listing === listing);
+    expect(publicItem.claim.status).toBe('available');
+    const editable = (await state()).details;
+    expect((await call('/marketplace/edit', { listing, previous: editable, details: editable }, seller.cookie)).status).toBe(200);
+    expect((await call('/marketplace/claim', { listing }, other.cookie)).status).toBe(200);
+    expect((await call('/marketplace/cancel', { listing }, other.cookie)).status).toBe(200);
+    expect((await call('/marketplace/claim', { listing }, buyer.cookie)).status).toBe(200);
+
     expect((await report()).status).toBe(200);
     expect((await reject('relist')).status).toBe(200);
     expect((await state()).claim.status).toBe('available');

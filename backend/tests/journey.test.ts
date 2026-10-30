@@ -52,6 +52,12 @@ test('empty-database journey, role enforcement, concurrent claims, and persisten
     expect(releasedPage.body.marketplace.listings[0].transaction.status).toBeNull();
     expect((await call('/marketplace/claim', { listing }, buyer.cookie)).status).toBe(200);
     expect((await call('/marketplace/cancel', { listing }, seller.cookie)).status).toBe(200);
+    const publicRelisted = (await call('/marketplace/list')).body.marketplace.listings.find((item: any) => item.listing === listing);
+    expect(publicRelisted.claim.status).toBe('available');
+    expect((await call('/marketplace/payment', { listing }, buyer.cookie)).body.transaction.payment.terms).toBeNull();
+    expect((await call('/marketplace/report-paid', { listing }, buyer.cookie)).status).toBe(403);
+    expect((await call('/marketplace/claim', { listing }, rival.cookie)).status).toBe(200);
+    expect((await call('/marketplace/cancel', { listing }, seller.cookie)).status).toBe(200);
     expect((await call('/marketplace/claim', { listing }, seller.cookie)).status).toBe(403);
     const competition = await Promise.all([call('/marketplace/claim', { listing }, buyer.cookie), call('/marketplace/claim', { listing }, rival.cookie)]);
     expect(competition.map(r => r.status).sort()).toEqual([200, 409]);

@@ -190,7 +190,7 @@ Defined in [TransactionConfirming](../design/concepts/TransactionConfirming.md),
 - `reportPaid(payer: Payer, subject: Subject) : returns (subject: Subject)`
   - Refuses `INVALID_TRANSACTION`: Only the buyer can report payment on an unpaid transaction.
 - `cancel(actor: Actor, subject: Subject) : returns (subject: Subject, payer: Payer)`
-  - Refuses `CANCELLATION_UNAVAILABLE`: Only the buyer or seller can cancel before payment is reported.
+  - Refuses `CANCELLATION_UNAVAILABLE`: Only the buyer or seller can cancel an unpaid reservation or a rejected payment report.
 - `rejectPayment(payee: Payee, subject: Subject, decision: String) : returns (subject: Subject, payer: Payer, decision: String)`
   - Refuses `INVALID_TRANSACTION`: Only the seller can reject a reported payment.
 - `confirmReceived(payee: Payee, subject: Subject) : returns (subject: Subject)`
@@ -1064,6 +1064,19 @@ Authored path: `Marketplace.Workflow.ReleaseCancelled`.
 
 ```reaction
 when TransactionConfirming.cancel (subject: listing, payer: buyer)
+then
+  Listing.unfreeze (listing)
+```
+
+### Marketplace.Workflow.ReleaseCancelled#2
+
+Authored path: `Marketplace.Workflow.ReleaseCancelled`.
+- Covered by [Marketplace](../design/compositions/Marketplace.md), line 15.
+
+```reaction
+when Listing.unfreeze (listing), asked by Marketplace.Workflow.ReleaseCancelled
+where
+  earlier, TransactionConfirming.cancel (subject: listing, payer: buyer)
 then
   Claiming.release (claimer: buyer, resource: listing)
 ```

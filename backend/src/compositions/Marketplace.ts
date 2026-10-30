@@ -28,6 +28,7 @@ const CompleteClaim = reaction(({ listing, buyer }) =>
     .then(Claiming.complete({ resource: listing, claimer: buyer })));
 const ReleaseCancelled = reaction(({ listing, buyer }) =>
   when(TransactionConfirming.cancel({ subject: listing }).responds({ payer: buyer }))
+    .then(Listing.unfreeze({ listing }).responds({}))
     .then(Claiming.release({ resource: listing, claimer: buyer })));
 
 const ReleaseRejected = reaction(({ listing, buyer }) =>

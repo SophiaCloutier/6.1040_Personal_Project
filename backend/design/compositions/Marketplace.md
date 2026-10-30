@@ -12,7 +12,7 @@ Browsing is public; mutation endpoints and private activity resolve the account 
 
 [Browse](reaction:Marketplace.Workflow.Browse) reads the marketplace for a signed-in user. [Publish](reaction:Marketplace.Workflow.Publish) creates a fixed-price listing attributed to that user. [Claim](reaction:Marketplace.Workflow.Claim) applies purchase permission and atomically reserves the item. [Report payment](reaction:Marketplace.Workflow.ReportPaid) records the payer's report. [Confirm receipt](reaction:Marketplace.Workflow.Confirm) records the payee's confirmation.
 
-[Cancel](reaction:Marketplace.Workflow.Cancel) lets the buyer or seller cancel before reporting payment. Its atomic transaction deletion competes with payment reporting so both cannot succeed. [Release cancellation](reaction:Marketplace.Workflow.ReleaseCancelled) releases the original buyer's claim, making the item available again. A later claim starts a fresh transaction. Cancellation after reporting payment or after confirmation is refused.
+[Cancel](reaction:Marketplace.Workflow.Cancel) lets the buyer or seller cancel before reporting payment or after the seller rejects the report. Its atomic transaction deletion competes with payment reporting so both cannot succeed. [Release cancellation](reaction:Marketplace.Workflow.ReleaseCancelled) unlocks the listing before releasing the original buyer's claim, making the item available again. A later claim starts a fresh transaction. Cancellation while payment awaits seller confirmation or after confirmation is refused.
 
 ```endpoints
 Marketplace.Workflow.Activity at /marketplace/activity

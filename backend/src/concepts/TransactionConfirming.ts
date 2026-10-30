@@ -55,8 +55,8 @@ export class TransactionConfirmingConcept {
     return { subject, payer: row.payer, decision };
   }
   async cancel({ actor, subject }: { actor: string; subject: string }) {
-    const row = await this.rows.findOneAndDelete({ subject, status: 'awaitingPayment', $or: [{ payer: actor }, { payee: actor }] });
-    if (!row) throw new CancellationUnavailable('Only the buyer or seller can cancel before payment is reported.');
+    const row = await this.rows.findOneAndDelete({ subject, status: { $in: ['awaitingPayment', 'paymentRejected'] }, $or: [{ payer: actor }, { payee: actor }] });
+    if (!row) throw new CancellationUnavailable('Only the buyer or seller can cancel an unpaid reservation or a rejected payment report.');
     return { subject, payer: row.payer };
   }
   async _get({ subject }: { subject: string }): Promise<Array<{ payer: string; payee: string; status: string }>> {

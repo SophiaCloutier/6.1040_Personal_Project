@@ -64,10 +64,10 @@ reportPaid (payer: Payer, subject: Subject) : returns (subject: Subject)
     set status to awaitingConfirmation
     returns subject
 cancel (actor: Actor, subject: Subject) : returns (subject: Subject, payer: Payer)
-  where subject is not awaitingPayment or actor is neither its payer nor payee
+  where subject is neither awaitingPayment nor paymentRejected or actor is neither its payer nor payee
   then
-    refuses CANCELLATION_UNAVAILABLE "Only the buyer or seller can cancel before payment is reported."
-  where subject is awaitingPayment and actor is its payer or payee
+    refuses CANCELLATION_UNAVAILABLE "Only the buyer or seller can cancel an unpaid reservation or a rejected payment report."
+  where subject is awaitingPayment or paymentRejected and actor is its payer or payee
   then
     atomically remove the transaction
     returns subject, payer
